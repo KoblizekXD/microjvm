@@ -1,6 +1,6 @@
 #include <stddef.h>
-#include <types.h>
-#include <read.h>
+#include <classfile/types.h>
+#include <classfile/read.h>
 #include <stdlib.h>
 
 #define free_if_not_null(OBJECT) if (OBJECT != NULL) free(OBJECT);

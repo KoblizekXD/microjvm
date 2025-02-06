@@ -2,7 +2,7 @@
 #define MICROJVM_READ_H
 
 #include <stdio.h>
-#include <types.h>
+#include <classfile/types.h>
 
 /**
  * Attempts to read a standard JVM class file object from the given stream.

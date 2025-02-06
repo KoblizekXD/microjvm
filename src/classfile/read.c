@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <types.h>
-#include <read.h>
+#include <classfile/types.h>
+#include <classfile/read.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
