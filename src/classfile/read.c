@@ -22,6 +22,7 @@
 cp_info *read_cp(FILE *stream, size_t entries /* - 1 */);
 attribute_info *read_attr(FILE *stream, size_t entries);
 field_info *read_fields(FILE *stream, size_t entries);
+method_info *read_methods(FILE *stream, size_t entries);
 
 class_file *read_classfile(FILE *stream)
 {
@@ -143,4 +144,21 @@ field_info *read_fields(FILE *stream, size_t entries)
     }
 
     return fields;
+}
+
+method_info *read_methods(FILE *stream, size_t entries)
+{
+    uint16_t temp_16;
+    size_t result;
+    method_info *methods = (method_info*) malloc(sizeof(method_info) * entries);
+
+    for (size_t i = 0; i < entries; i++) {
+        read_16(methods[i].access_flags);
+        read_16(methods[i].name_index);
+        read_16(methods[i].descriptor_index);
+        read_16(methods[i].attributes_count);
+        methods[i].attributes = read_attr(stream, methods[i].attributes_count);
+    }
+
+    return methods;
 }
