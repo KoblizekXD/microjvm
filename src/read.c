@@ -21,6 +21,7 @@
 
 cp_info *read_cp(FILE *stream, size_t entries /* - 1 */);
 attribute_info *read_attr(FILE *stream, size_t entries);
+field_info *read_fields(FILE *stream, size_t entries);
 
 class_file *read_classfile(FILE *stream)
 {
@@ -50,6 +51,8 @@ class_file *read_classfile(FILE *stream)
     for (size_t i = 0; i < cf->interfaces_count; i++) {
         cf->interfaces[i] = be16toh(cf->interfaces[i]);
     }
+    read_16(cf->fields_count);
+    cf->fields = read_fields(stream, cf->fields_count);
 
     return cf;
 }
@@ -68,6 +71,7 @@ cp_info *read_cp(FILE *stream, size_t entries /* - 1 */)
             return NULL;
         }
         info[i].tag = tag;
+        // When adding new constants, don't forget to add them to cf_free too!!
         switch (tag) {
             case CONSTANT_Class:
                 read_16(info[i].info.class_info.name_index);
@@ -122,4 +126,21 @@ attribute_info *read_attr(FILE *stream, size_t entries)
         fread(attr[i].info, sizeof(uint8_t), attr[i].attribute_length, stream);
     }
     return attr;
+}
+
+field_info *read_fields(FILE *stream, size_t entries)
+{
+    uint16_t temp_16;
+    size_t result;
+    field_info *fields = (field_info*) malloc(sizeof(field_info) * entries);
+
+    for (size_t i = 0; i < entries; i++) {
+        read_16(fields[i].access_flags);
+        read_16(fields[i].name_index);
+        read_16(fields[i].descriptor_index);
+        read_16(fields[i].attributes_count);
+        fields[i].attributes = read_attr(stream, fields[i].attributes_count);
+    }
+
+    return fields;
 }
