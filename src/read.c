@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdint.h>
 #include <types.h>
 #include <read.h>
@@ -19,6 +20,7 @@
 #define read_8(SAVE_TO) if (fread(&SAVE_TO, sizeof(uint8_t), 1, stream) != 1)
 
 cp_info *read_cp(FILE *stream, size_t entries /* - 1 */);
+attribute_info *read_attr(FILE *stream, size_t entries);
 
 class_file *read_classfile(FILE *stream)
 {
@@ -43,6 +45,11 @@ class_file *read_classfile(FILE *stream)
     read_16(cf->this_class);
     read_16(cf->super_class);
     read_16(cf->interfaces_count);
+    cf->interfaces = (uint16_t*) malloc(sizeof(uint16_t) * cf->interfaces_count);
+    fread(cf->interfaces, sizeof(uint16_t), cf->interfaces_count, stream);
+    for (size_t i = 0; i < cf->interfaces_count; i++) {
+        cf->interfaces[i] = be16toh(cf->interfaces[i]);
+    }
 
     return cf;
 }
@@ -100,4 +107,19 @@ cp_info *read_cp(FILE *stream, size_t entries /* - 1 */)
         }
     }
     return info;
+}
+
+attribute_info *read_attr(FILE *stream, size_t entries)
+{
+    uint16_t temp_16;
+    uint32_t temp_32;
+    size_t result;
+    attribute_info *attr = (attribute_info*) malloc(sizeof(attribute_info) * entries);
+    for (size_t i = 0; i < entries; i++) {
+        read_16(attr[i].attribute_name_index);
+        read_32(attr[i].attribute_length);
+        attr[i].info = (uint8_t*) malloc(attr[i].attribute_length * sizeof(uint8_t));
+        fread(attr[i].info, sizeof(uint8_t), attr[i].attribute_length, stream);
+    }
+    return attr;
 }

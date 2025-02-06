@@ -14,4 +14,10 @@
  */
 class_file *read_classfile(FILE *stream);
 
+/**
+ * Frees given class file.
+ * No error will occur if operation fails.
+ */
+void free_classfile(class_file *cf);
+
 #endif // MICROJVM_READ_H

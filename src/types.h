@@ -22,6 +22,16 @@
 #define CONSTANT_Module	            19
 #define CONSTANT_Package	        20
 
+#define ACC_PUBLIC	    0x0001
+#define ACC_FINAL	    0x0010
+#define ACC_SUPER	    0x0020
+#define ACC_INTERFACE	0x0200
+#define ACC_ABSTRACT	0x0400
+#define ACC_SYNTHETIC	0x1000
+#define ACC_ANNOTATION	0x2000
+#define ACC_ENUM	    0x4000
+#define ACC_MODULE	    0x8000
+
 typedef struct {
     uint16_t attribute_name_index;
     uint32_t attribute_length;
