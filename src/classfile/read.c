@@ -54,6 +54,10 @@ class_file *read_classfile(FILE *stream)
     }
     read_16(cf->fields_count);
     cf->fields = read_fields(stream, cf->fields_count);
+    read_16(cf->methods_count);
+    cf->methods = read_methods(stream, cf->methods_count);
+    read_16(cf->attributes_count);
+    cf->attributes = read_attr(stream, cf->attributes_count);
 
     return cf;
 }

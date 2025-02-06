@@ -23,6 +23,15 @@ static void free_fields(field_info *fields, size_t count)
     free(fields);
 }
 
+static void free_methods(method_info *methods, size_t count)
+{
+    if (methods == NULL) return;
+    for (size_t i = 0; i < count; i++) {
+        free_attr_info(methods[i].attributes, methods[i].attributes_count);
+    }
+    free(methods);
+}
+
 static void free_cp(cp_info *cp, size_t count)
 {
     if (cp == NULL) return;
@@ -38,7 +47,7 @@ void free_classfile(class_file *cf)
     free_cp(cf->constant_pool, cf->constant_pool_count);
     free(cf->interfaces);
     free_fields(cf->fields, cf->fields_count);
-    // TODO: free field_info, method_info
+    free_methods(cf->methods, cf->methods_count);
     free_attr_info(cf->attributes, cf->attributes_count);
     free(cf);
 }
