@@ -7,14 +7,6 @@
 #include <errno.h>
 #include <endian.h>
 
-#define read_32(SAVE_TO) result = fread(&temp_32, sizeof(uint32_t), 1, stream); \
-                                  if (result != 1) return NULL; \
-                                  SAVE_TO = be32toh(temp_32)
-
-#define read_16(SAVE_TO) result = fread(&temp_16, sizeof(uint16_t), 1, stream); \
-                                  if (result != 1) return NULL; \
-                                  SAVE_TO = be16toh(temp_16)
-
 #define NONNULL_ASSIGN(ASSIGN_TO, WHAT) if (WHAT == NULL) return NULL; \
                                                   ASSIGN_TO = WHAT;
 #define read_8(SAVE_TO) if (fread(&SAVE_TO, sizeof(uint8_t), 1, stream) != 1)
@@ -23,8 +15,6 @@ cp_info *read_cp(FILE *stream, size_t entries /* - 1 */);
 attribute_info *read_attr(FILE *stream, size_t entries);
 field_info *read_fields(FILE *stream, size_t entries);
 method_info *read_methods(FILE *stream, size_t entries);
-
-int is_attr(class_file cf, attribute_info attr, const char *name);
 
 class_file *read_classfile(FILE *stream)
 {
@@ -169,14 +159,3 @@ method_info *read_methods(FILE *stream, size_t entries)
     return methods;
 }
 
-int is_attr(class_file cf, attribute_info attr, const char *name)
-{
-    cp_info e = cf.constant_pool[attr.attribute_name_index - 1];
-
-    for (size_t i = 0; i < e.info.utf8_info.length; i++)
-    {
-        if (e.info.utf8_info.bytes[i] != name[i]) return 0;
-    }
-
-    return 1;
-}

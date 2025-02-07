@@ -4,6 +4,14 @@
 #include <stdio.h>
 #include <classfile/types.h>
 
+#define read_32(SAVE_TO) result = fread(&temp_32, sizeof(uint32_t), 1, stream); \
+                                  if (result != 1) return NULL; \
+                                  SAVE_TO = be32toh(temp_32)
+
+#define read_16(SAVE_TO) result = fread(&temp_16, sizeof(uint16_t), 1, stream); \
+                                  if (result != 1) return NULL; \
+                                  SAVE_TO = be16toh(temp_16)
+
 /**
  * Attempts to read a standard JVM class file object from the given stream.
  * The class file is read in big endian format, but the `class_file` structure
