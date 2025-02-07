@@ -1,3 +1,4 @@
+#include "util.h"
 #include <classfile/types.h>
 #include <classfile/read.h>
 #include <stdio.h>
@@ -9,7 +10,7 @@ int main(int argc, char **argv)
 
     class_file *cf = read_classfile(f);
 
-    printf("%d %d\n", cf->major_version, cf->minor_version); 
+    dump(stdout, *cf);
     free_classfile(cf);
     fclose(f);
     return 0;
