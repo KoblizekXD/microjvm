@@ -24,6 +24,8 @@ attribute_info *read_attr(FILE *stream, size_t entries);
 field_info *read_fields(FILE *stream, size_t entries);
 method_info *read_methods(FILE *stream, size_t entries);
 
+int is_attr(class_file cf, attribute_info attr, const char *name);
+
 class_file *read_classfile(FILE *stream)
 {
     if (stream == NULL) 
@@ -165,4 +167,16 @@ method_info *read_methods(FILE *stream, size_t entries)
     }
 
     return methods;
+}
+
+int is_attr(class_file cf, attribute_info attr, const char *name)
+{
+    cp_info e = cf.constant_pool[attr.attribute_name_index - 1];
+
+    for (size_t i = 0; i < e.info.utf8_info.length; i++)
+    {
+        if (e.info.utf8_info.bytes[i] != name[i]) return 0;
+    }
+
+    return 1;
 }
