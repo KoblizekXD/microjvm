@@ -8,6 +8,6 @@
 #include <stdio.h>
 
 int is_attr(class_file cf, attribute_info attr, const char *name);
-int read_attr_data(FILE *stream, class_file cf, attribute_info *info);
+void *read_attr_data(FILE *stream, class_file cf, attribute_info *info);
 
 #endif // MICROJVM_ATTR_H
