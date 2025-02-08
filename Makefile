@@ -6,8 +6,8 @@ OUTPUT  := $(BUILD)/main
 INCLUDE := include
 SRC     := src
 
-CFLAGS  := -Wall -Wextra -g -O2 -std=gnu11 -I $(SRC) -I $(INCLUDE)
-LDFLAGS := -g
+CFLAGS  := -Wall -fsanitize=address -Wextra -g -O2 -std=gnu11 -I $(SRC) -I $(INCLUDE)
+LDFLAGS := -g -fsanitize=address
 
 CFILES := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
 OBJ    := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o))

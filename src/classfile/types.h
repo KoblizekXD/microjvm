@@ -107,6 +107,7 @@ typedef struct attr_permitted_subclasses {
 typedef struct _attribute_info {
     uint16_t attribute_name_index;
     uint32_t attribute_length;
+    uint16_t synth_attr_type; // Synthetically added, so identifying the attribute is easier. Not actually present in the bytecode
     union {
         constant_value constant_value;
         code code_attribute;
