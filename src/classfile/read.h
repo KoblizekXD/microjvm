@@ -28,4 +28,9 @@ class_file *read_classfile(FILE *stream);
  */
 void free_classfile(class_file *cf);
 
+/**
+ * Reads n attribute entries from stream and dynamically allocates them. 
+ */
+attribute_info *read_attr(FILE *stream, size_t n, class_file cf);
+
 #endif // MICROJVM_READ_H

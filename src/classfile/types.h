@@ -42,10 +42,71 @@
 #define ACC_ENUM	     0x4000
 #define ACC_MODULE	     0x8000
 
+// Structures related to class file attributes
+
+struct _attribute_info;
+
+struct attr_constant_value;
+struct attr_code;
+struct attr_stackmap_table;
+struct attr_bootstrap_methods;
+struct attr_nest_host;
+struct attr_nest_members;
+struct attr_permitted_subclasses;
+
+typedef struct attr_constant_value {
+    uint16_t constant_value_index;
+} constant_value;
+
+typedef struct attr_code {
+    uint16_t max_stack;
+    uint16_t max_locals;
+    uint32_t code_length;
+    uint8_t* code;
+    uint16_t exception_table_length;
+    struct _exc_table {
+        uint16_t start_pc;
+        uint16_t end_pc;
+        uint16_t handler_pc;
+        uint16_t catch_type;
+    } *exception_table;
+    uint16_t attributes_count;
+    struct _attribute_info *attributes;
+} code;
+
+typedef struct attr_stackmap_table {
+    uint16_t number_of_entries;
+    struct _stackmap_frame {
+
+    } *entries;
+} stackmap_table;
+
+typedef struct attr_bootstrap_methods {
+    uint16_t num_bootstrap_methods;
+    struct _bootstrap_methods {
+        uint16_t bootstrap_method_ref;
+        uint16_t num_bootstrap_args;
+        uint16_t *bootstrap_arguments;
+    } *bootstrap_methods;
+} bootstrap_methods;
+
+typedef struct attr_nest_host {
+    uint16_t host_class_index;
+} nest_host;
+
+typedef struct attr_nest_members {
+    uint16_t number_of_classes;
+    uint16_t *classes;
+} nest_members;
+
+typedef struct attr_permitted_subclasses {
+    uint16_t number_of_classes;
+    uint16_t *classes;
+} permitted_subclasses;
+
 typedef struct _attribute_info {
     uint16_t attribute_name_index;
     uint32_t attribute_length;
-    uint8_t* info;
     union {
         struct {
             uint16_t constantvalue_index;
@@ -56,7 +117,7 @@ typedef struct _attribute_info {
             uint32_t code_length;
             uint8_t* code;
             uint16_t exception_table_length;
-            struct {
+            struct _exc_table {
                 uint16_t start_pc;
                 uint16_t end_pc;
                 uint16_t handler_pc;
@@ -66,12 +127,11 @@ typedef struct _attribute_info {
             struct _attribute_info *attributes;
         } code_attribute;
         struct {
-            uint16_t entries;
-            // Todo
+            void *fill; // TODO: Implement this!!
         } stackmap_table;
         struct {
             uint16_t num_bootstrap_methods;
-            struct {
+            struct _bootstrap_methods {
                 uint16_t bootstrap_method_ref;
                 uint16_t num_bootstrap_args;
                 uint16_t *bootstrap_arguments;

@@ -1,4 +1,8 @@
+#include <classfile/read.h>
+#include <classfile/types.h>
 #include <classfile/attr.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 int is_attr(class_file cf, attribute_info attr, const char *name)
 {
@@ -15,7 +19,7 @@ int is_attr(class_file cf, attribute_info attr, const char *name)
 int read_attr_data(FILE *stream, class_file cf, attribute_info *info)
 {
     uint32_t temp_32;
-    uint32_t temp_16;
+    uint16_t temp_16;
     size_t result = 1;
 
     if (is_attr(cf, *info, "ConstantValue")) {
@@ -25,11 +29,26 @@ int read_attr_data(FILE *stream, class_file cf, attribute_info *info)
         read_16(info->data.code_attribute.max_locals);
         read_32(info->data.code_attribute.code_length);
         fread(info->data.code_attribute.code, sizeof(uint8_t), info->data.code_attribute.code_length, stream); 
+        read_16(info->data.code_attribute.exception_table_length);
+        info->data.code_attribute.exception_table = (struct _exc_table*) malloc(sizeof(struct _exc_table) * info->data.code_attribute.exception_table_length);
+        for (size_t i = 0; i < info->data.code_attribute.exception_table_length; i++) {
+            read_16(info->data.code_attribute.exception_table[i].start_pc);
+            read_16(info->data.code_attribute.exception_table[i].end_pc);
+            read_16(info->data.code_attribute.exception_table[i].handler_pc);
+            read_16(info->data.code_attribute.exception_table[i].catch_type);
+        }
+        read_16(info->data.code_attribute.attributes_count);
+        info->data.code_attribute.attributes = read_attr(stream, info->data.code_attribute.attributes_count, cf);
     } else if (is_attr(cf, *info, "StackMapTable")) {
-
+        info->data.stackmap_table.fill = malloc(sizeof(uint8_t) * info->attribute_length);
     } else if (is_attr(cf, *info, "BootstrapMethods")) {
         read_16(info->data.bootstrap_methods.num_bootstrap_methods);
-        
+        info->data.bootstrap_methods.bootstrap_methods = (struct _bootstrap_methods*) malloc(sizeof(struct _bootstrap_methods) * info->data.bootstrap_methods.num_bootstrap_methods);
+        for (size_t i = 0; i < info->data.bootstrap_methods.num_bootstrap_methods; i++) {
+            read_16(info->data.bootstrap_methods.bootstrap_methods[i].bootstrap_method_ref);
+            read_16(info->data.bootstrap_methods.bootstrap_methods[i].num_bootstrap_args);
+            info->data.bootstrap_methods.bootstrap_methods[i].bootstrap_arguments = (uint16_t*) malloc(sizeof(uint16_t) * info->data.bootstrap_methods.bootstrap_methods[i].num_bootstrap_args);
+        }
     } else if (is_attr(cf, *info, "NestHost")) {
         read_16(info->data.nest_host.host_class_index);
     } else if (is_attr(cf, *info, "NestMembers")) {

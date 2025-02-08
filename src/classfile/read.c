@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <classfile/types.h>
 #include <classfile/read.h>
+#include <classfile/attr.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -12,9 +13,9 @@
 #define read_8(SAVE_TO) if (fread(&SAVE_TO, sizeof(uint8_t), 1, stream) != 1)
 
 cp_info *read_cp(FILE *stream, size_t entries /* - 1 */);
-attribute_info *read_attr(FILE *stream, size_t entries);
-field_info *read_fields(FILE *stream, size_t entries);
-method_info *read_methods(FILE *stream, size_t entries);
+attribute_info *read_attr(FILE *stream, size_t entries, class_file cf);
+field_info *read_fields(FILE *stream, size_t entries, class_file cf);
+method_info *read_methods(FILE *stream, size_t entries, class_file cf);
 
 class_file *read_classfile(FILE *stream)
 {
@@ -45,11 +46,11 @@ class_file *read_classfile(FILE *stream)
         cf->interfaces[i] = be16toh(cf->interfaces[i]);
     }
     read_16(cf->fields_count);
-    cf->fields = read_fields(stream, cf->fields_count);
+    cf->fields = read_fields(stream, cf->fields_count, *cf);
     read_16(cf->methods_count);
-    cf->methods = read_methods(stream, cf->methods_count);
+    cf->methods = read_methods(stream, cf->methods_count, *cf);
     read_16(cf->attributes_count);
-    cf->attributes = read_attr(stream, cf->attributes_count);
+    cf->attributes = read_attr(stream, cf->attributes_count, *cf);
 
     return cf;
 }
@@ -110,7 +111,7 @@ cp_info *read_cp(FILE *stream, size_t entries /* - 1 */)
     return info;
 }
 
-attribute_info *read_attr(FILE *stream, size_t entries)
+attribute_info *read_attr(FILE *stream, size_t entries, class_file cf)
 {
     uint16_t temp_16;
     uint32_t temp_32;
@@ -119,13 +120,14 @@ attribute_info *read_attr(FILE *stream, size_t entries)
     for (size_t i = 0; i < entries; i++) {
         read_16(attr[i].attribute_name_index);
         read_32(attr[i].attribute_length);
-        attr[i].info = (uint8_t*) malloc(attr[i].attribute_length * sizeof(uint8_t));
-        fread(attr[i].info, sizeof(uint8_t), attr[i].attribute_length, stream);
+        read_attr_data(stream, cf, &attr[i]);
+        // attr[i].info = (uint8_t*) malloc(attr[i].attribute_length * sizeof(uint8_t));
+        // fread(attr[i].info, sizeof(uint8_t), attr[i].attribute_length, stream);
     }
     return attr;
 }
 
-field_info *read_fields(FILE *stream, size_t entries)
+field_info *read_fields(FILE *stream, size_t entries, class_file cf)
 {
     uint16_t temp_16;
     size_t result;
@@ -136,13 +138,13 @@ field_info *read_fields(FILE *stream, size_t entries)
         read_16(fields[i].name_index);
         read_16(fields[i].descriptor_index);
         read_16(fields[i].attributes_count);
-        fields[i].attributes = read_attr(stream, fields[i].attributes_count);
+        fields[i].attributes = read_attr(stream, fields[i].attributes_count, cf);
     }
 
     return fields;
 }
 
-method_info *read_methods(FILE *stream, size_t entries)
+method_info *read_methods(FILE *stream, size_t entries, class_file cf)
 {
     uint16_t temp_16;
     size_t result;
@@ -153,7 +155,7 @@ method_info *read_methods(FILE *stream, size_t entries)
         read_16(methods[i].name_index);
         read_16(methods[i].descriptor_index);
         read_16(methods[i].attributes_count);
-        methods[i].attributes = read_attr(stream, methods[i].attributes_count);
+        methods[i].attributes = read_attr(stream, methods[i].attributes_count, cf);
     }
 
     return methods;
