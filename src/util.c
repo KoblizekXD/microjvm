@@ -51,3 +51,13 @@ void debug_fprintf(FILE *stream, const char *format, ...)
     fprintf(stream, "\x1b[0m\n");
 #endif
 }
+
+void errprintf(const char *format, ...)
+{
+    fprintf(stderr, "\x1b[37;41m[VMERROR]\x1b[0m ");
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    printf("\n");
+}
