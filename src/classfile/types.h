@@ -143,7 +143,7 @@ typedef struct {
             uint16_t name_index;
             uint16_t descriptor_index;
         } name_and_type_info;
-        struct {
+        struct _utf8_info {
             uint16_t length;
             uint8_t *bytes;
         } utf8_info;
