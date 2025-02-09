@@ -1,4 +1,4 @@
-#include "util.h"
+#include "native/runtime.h"
 #include <classfile/types.h>
 #include <classfile/read.h>
 #include <stdint.h>
@@ -15,14 +15,5 @@ int main(int argc, char **argv)
     class_file *cf = read_classfile(f);
     fclose(f);
 
-    method_info *main_method = get_main(cf);
-
-    if (main_method == NULL) {
-        fprintf(stderr, "Error: No suitable exection entry point found\n");
-        free_classfile(cf);
-        return 1;
-    }
-
-    free_classfile(cf); 
-    return 0;
+    return entry(cf);
 }

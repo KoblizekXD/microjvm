@@ -1,3 +1,4 @@
+#include "util.h"
 #include <classfile/read.h>
 #include <classfile/types.h>
 #include <classfile/attr.h>
@@ -71,7 +72,7 @@ void *read_attr_data(FILE *stream, class_file cf, attribute_info *info)
         fread(info->data.permitted_subclasses.classes, sizeof(uint16_t), info->data.permitted_subclasses.number_of_classes, stream); 
     } else {
         info->synth_attr_type = ATTR_UNKNOWN;
-        fprintf(stderr, "Error: Cannot determine attribute %.*s\n", cf.constant_pool[info->attribute_name_index - 1].info.utf8_info.length,
+        debug_fprintf(stderr, "Error: Cannot determine attribute %.*s", cf.constant_pool[info->attribute_name_index - 1].info.utf8_info.length,
                 cf.constant_pool[info->attribute_name_index - 1].info.utf8_info.bytes);
         fseek(stream, info->attribute_length, SEEK_CUR);
     }

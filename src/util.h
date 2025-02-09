@@ -9,5 +9,6 @@
 void dump(FILE *stream, class_file cf);
 int streq(const char *s1, uint8_t *s2, size_t s2_len);
 method_info *get_main(class_file *cf);
+void debug_fprintf(FILE *stream, const char *format, ...);
 
 #endif

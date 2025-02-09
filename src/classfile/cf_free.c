@@ -1,3 +1,4 @@
+#include <util.h>
 #include <classfile/attr.h>
 #include <stddef.h>
 #include <classfile/types.h>
@@ -21,7 +22,7 @@ static void free_attr_info(attribute_info *attr, size_t count)
                 free(attr->data.nest_members.classes);
                 break;
             default:
-                printf("Unsure what to free because of unknown tag %d\n", attr->synth_attr_type);
+                debug_fprintf(stderr, "Unsure what to free because of unknown tag %d", attr->synth_attr_type);
                 break;
         }
     }

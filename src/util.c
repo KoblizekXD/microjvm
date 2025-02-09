@@ -4,6 +4,9 @@
 #include <util.h>
 #include <classfile/types.h>
 #include <endian.h>
+#include <stdarg.h>
+
+#define VM_DEBUG
 
 int streq(const char *s1, uint8_t *s2, size_t s2_len)
 {
@@ -35,4 +38,16 @@ method_info* get_main(class_file *cf)
             return &cf->methods[i];
     }
     return NULL;
+}
+
+void debug_fprintf(FILE *stream, const char *format, ...)
+{
+#ifdef VM_DEBUG
+    fprintf(stream, "\x1b[90m[VMDEBUG] ");
+    va_list args;
+    va_start(args, format);
+    vfprintf(stream, format, args);
+    va_end(args);
+    fprintf(stream, "\x1b[0m\n");
+#endif
 }
