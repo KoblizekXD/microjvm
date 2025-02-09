@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 // The program counter register. Must be set and modified during method execution.
-uint64_t pc = 0x0;
+uint8_t *pc = 0x0;
 
 int main(int argc, char **argv)
 {

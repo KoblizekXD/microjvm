@@ -1,12 +1,15 @@
 #include <classfile/attr.h>
 #include <classfile/read.h>
 #include <native/runtime.h>
+#include <native/stack.h>
 #include <classfile/types.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <util.h>
 
-extern uint64_t pc;
+extern uint8_t *pc;
+extern void parse_instruction(class_file *cf, code c, stack_t *op_stack);
 
 attribute_info *get_attr(attribute_info *attrs, size_t size, int id)
 {
@@ -15,6 +18,19 @@ attribute_info *get_attr(attribute_info *attrs, size_t size, int id)
             return &attrs[i];
     }
     return NULL;
+}
+
+void bytecode_exec(class_file *cf, code c)
+{
+    debug_fprintf(stdout, "Entering bytecode execution: stack=%d, locals=%d", c.max_stack, c.max_locals); 
+    pc = c.code;
+    stack_t *op_stack = create(c.max_stack);
+
+    while (pc < c.code + c.code_length) {
+        parse_instruction(cf, c, op_stack);
+    }
+
+    destroy(op_stack);
 }
 
 int entry(class_file *cf)
@@ -28,7 +44,8 @@ int entry(class_file *cf)
     }
 
     code c = get_attr(main_method->attributes, main_method->attributes_count, CODE)->data.code_attribute;
-    pc = (uintptr_t) c.code;
+
+    bytecode_exec(cf, c);
 
     free_classfile(cf);
     return 0;
