@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <endian.h>
+#include <unistd.h>
 
 #define NONNULL_ASSIGN(ASSIGN_TO, WHAT) if (WHAT == NULL) return NULL; \
                                                   ASSIGN_TO = WHAT;
@@ -102,6 +103,22 @@ cp_info *read_cp(FILE *stream, size_t entries /* - 1 */)
                 result = fread(info[i].info.utf8_info.bytes, sizeof(uint8_t), info[i].info.utf8_info.length, stream);
                 if (result != info[i].info.utf8_info.length)
                     return NULL;
+                break;
+            case CONSTANT_MethodHandle:
+                read_8(info[i].info.mh_info.reference_kind) return NULL;
+                read_16(info[i].info.mh_info.reference_index);
+                break;
+            case CONSTANT_MethodType:
+                read_16(info[i].info.mt_info.descriptor_index);
+                break;
+            case CONSTANT_Dynamic:
+            case CONSTANT_InvokeDynamic:
+                read_16(info[i].info.dyn_invoke_dyn_info.bootstrap_method_attr_index);
+                read_16(info[i].info.dyn_invoke_dyn_info.name_and_type_index);
+                break;
+            case CONSTANT_Module:
+            case CONSTANT_Package:
+                read_16(info[i].info.module_package_info.name_index);
                 break;
             default:
                 fprintf(stderr, "Invalid constant pool tag: %d\n", tag);

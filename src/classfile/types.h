@@ -147,6 +147,20 @@ typedef struct {
             uint16_t length;
             uint8_t *bytes;
         } utf8_info;
+        struct _method_handle_info {
+            uint8_t reference_kind;
+            uint16_t reference_index;
+        } mh_info;
+        struct _method_type_info {
+            uint16_t descriptor_index;
+        } mt_info;
+        struct {
+            uint16_t bootstrap_method_attr_index;
+            uint16_t name_and_type_index;
+        } dyn_invoke_dyn_info;
+        struct {
+            uint16_t name_index;
+        } module_package_info;
     } info;
 } cp_info;
 

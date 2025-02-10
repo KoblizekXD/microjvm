@@ -6,10 +6,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <util.h>
 
 extern uint8_t *pc;
 extern void parse_instruction(class_file *cf, code c, stack_t *op_stack);
+extern class_file **read_jmod(const char *java_home, const char *jmod_name);
 
 attribute_info *get_attr(attribute_info *attrs, size_t size, int id)
 {
@@ -35,6 +37,7 @@ void bytecode_exec(class_file *cf, code c)
 
 int entry(class_file *cf)
 {
+    read_jmod(getenv("JAVA_HOME"), "java.base");
     method_info *main_method = get_main(cf);
 
     if (main_method == NULL) {
