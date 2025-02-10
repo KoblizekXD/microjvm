@@ -1,3 +1,4 @@
+#include "util.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <classfile/types.h>
@@ -37,6 +38,10 @@ class_file *read_classfile(FILE *stream)
     read_16(cf->major_version);
     read_16(cf->constant_pool_count);
     cf->constant_pool = read_cp(stream, cf->constant_pool_count - 1);
+    if (cf->constant_pool == NULL) {
+        errprintf("Failed to read constant pool");
+        return NULL;
+    }
     read_16(cf->access_flags);
     read_16(cf->this_class);
     read_16(cf->super_class);
@@ -92,6 +97,7 @@ cp_info *read_cp(FILE *stream, size_t entries /* - 1 */)
             case CONSTANT_Double:
                 read_32(info[i].info.long_double_info.high_bytes);
                 read_32(info[i].info.long_double_info.low_bytes);
+                i++;
                 break;
             case CONSTANT_NameAndType:
                 read_16(info[i].info.name_and_type_info.name_index);

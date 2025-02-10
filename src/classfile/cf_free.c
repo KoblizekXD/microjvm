@@ -12,17 +12,26 @@ static void free_attr_info(attribute_info *attr, size_t count)
 {
     if (attr == NULL) return;
     for (size_t i = 0; i < count; i++) {
-        switch (attr->synth_attr_type) {
+        switch (attr[i].synth_attr_type) {
             case CODE:
-                free(attr->data.code_attribute.code);
-                free(attr->data.code_attribute.exception_table);
-                free_attr_info(attr->data.code_attribute.attributes, attr->data.code_attribute.attributes_count);
+                free(attr[i].data.code_attribute.code);
+                free(attr[i].data.code_attribute.exception_table);
+                free_attr_info(attr[i].data.code_attribute.attributes, attr[i].data.code_attribute.attributes_count); 
                 break;
             case NEST_MEMBERS:
-                free(attr->data.nest_members.classes);
+                free(attr[i].data.nest_members.classes);
+                break;
+            case PERMITTED_SUBCLASSES:
+                free(attr[i].data.permitted_subclasses.classes);
+                break;
+            case BOOTSTRAP_METHODS:
+                for (size_t j = 0; j < attr[i].data.bootstrap_methods.num_bootstrap_methods; j++) {
+                    free(attr[i].data.bootstrap_methods.bootstrap_methods[j].bootstrap_arguments);
+                }
+                free(attr[i].data.bootstrap_methods.bootstrap_methods);
                 break;
             default:
-                debug_fprintf(stderr, "Unsure what to free because of unknown tag %d", attr->synth_attr_type);
+                debug_fprintf(stderr, "Unsure what to free because of unknown tag %d", attr[i].synth_attr_type);
                 break;
         }
     }
@@ -59,6 +68,10 @@ static void free_cp(cp_info *cp, size_t count)
 
 void free_classfile(class_file *cf)
 {
+    if (cf == NULL) {
+        errprintf("Failed to free classfile, because passing classfile was NULL!");
+        return;
+    }
     free_cp(cf->constant_pool, cf->constant_pool_count - 1);
     free(cf->interfaces);
     free_fields(cf->fields, cf->fields_count);
