@@ -8,6 +8,16 @@
 #include <stddef.h>
 #include <string.h>
 
+int utf8eq(struct _utf8_info utf8str, const char *cstr)
+{
+    size_t cstr_len = strlen(cstr);
+    if (utf8str.length != cstr_len) return 0;
+    for (size_t i = 0; i < cstr_len; i++) {
+        if (utf8str.bytes[i] != cstr[i]) return 0;
+    }
+    return 1;
+}
+
 int is_attr(class_file cf, attribute_info attr, const char *name)
 {
     if (cf.constant_pool_count < attr.attribute_name_index) {
@@ -16,7 +26,7 @@ int is_attr(class_file cf, attribute_info attr, const char *name)
     }
     cp_info e = cf.constant_pool[attr.attribute_name_index - 1];
     if (e.tag != CONSTANT_Utf8) {
-        errprintf("Expecting UTF8 tag but got %d instead(requesting entry %d (-1))", e.tag, attr.attribute_name_index);
+        // errprintf("Expecting UTF8 tag but got %d instead(requesting entry %d)", e.tag, attr.attribute_name_index);
         return 0;
     }
     if (e.info.utf8_info.length != strlen(name)) return 0;
@@ -66,6 +76,7 @@ void *read_attr_data(FILE *stream, class_file cf, attribute_info *info)
             read_16(info->data.bootstrap_methods.bootstrap_methods[i].bootstrap_method_ref);
             read_16(info->data.bootstrap_methods.bootstrap_methods[i].num_bootstrap_args);
             info->data.bootstrap_methods.bootstrap_methods[i].bootstrap_arguments = (uint16_t*) malloc(sizeof(uint16_t) * info->data.bootstrap_methods.bootstrap_methods[i].num_bootstrap_args);
+            fread(info->data.bootstrap_methods.bootstrap_methods[i].bootstrap_arguments, sizeof(uint16_t), info->data.bootstrap_methods.bootstrap_methods[i].num_bootstrap_args, stream);
         }
     } else if (is_attr(cf, *info, "NestHost")) {
         info->synth_attr_type = NEST_HOST;

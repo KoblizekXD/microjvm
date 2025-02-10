@@ -32,7 +32,6 @@ class_file *read_classfile(FILE *stream)
     size_t result = 1;
 
     class_file* cf = (class_file*) malloc(sizeof(class_file));
-
     read_32(cf->magic);
     read_16(cf->minor_version);
     read_16(cf->major_version);
