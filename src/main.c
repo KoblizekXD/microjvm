@@ -11,7 +11,7 @@
 uint8_t *pc = 0x0;
 
 void print_help();
-extern class_file **read_jmod(const char *java_home, const char *jmod_name);
+extern size_t read_jmod(const char *java_home, const char *jmod_name, class_file ***entries);
 
 int main(int argc, char **argv)
 {
@@ -30,9 +30,11 @@ int main(int argc, char **argv)
         errprintf("JAVA_HOME must be set in order to correctly reinterpret Java's runtime classes.\n\tIf you wish to continue anyways, use flag --no-default-lib");
         exit(1);
     }
-
-    if (argc != 2 || strcmp(argv[1], "--no-default-lib") != 0)
-        read_jmod(getenv("JAVA_HOME"), "java.base");
+    class_file **cf_entries;
+    size_t entries = 0;
+    if (argc != 2 || strcmp(argv[1], "--no-default-lib") != 0) {
+        entries = read_jmod(getenv("JAVA_HOME"), "java.base", &cf_entries);
+    }
 
     FILE* f = fopen("build/Test.class", "rb"); 
 

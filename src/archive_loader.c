@@ -36,7 +36,7 @@ int ends_with(const char *str, const char *suffix)
     return strcmp(str + (str_len - suffix_len), suffix) == 0;
 }
 
-class_file **read_jmod(const char *java_home, const char *jmod_name)
+size_t read_jmod(const char *java_home, const char *jmod_name, class_file ***entries)
 {
     size_t s1len = strlen(java_home);
     size_t s2len = strlen(jmod_name);
@@ -49,8 +49,8 @@ class_file **read_jmod(const char *java_home, const char *jmod_name)
 
     struct archive *a;
     struct archive_entry *entry;
-    class_file **listing = NULL;
     int r;
+    size_t entry_count = 0;
     a = archive_read_new();
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
@@ -76,13 +76,16 @@ class_file **read_jmod(const char *java_home, const char *jmod_name)
         FILE* stream = fmemopen(data, size, "rb");
 
         if (stream != NULL) {
-           free_classfile(read_classfile(stream));
+            class_file *cf = read_classfile(stream);
+            *entries = realloc(entries, (entry_count + 1) * sizeof(class_file*));
+            entry_count++;
+            *entries[entry_count - 1] = cf;
         } else errprintf("Failed to open memory handle");
 
         free(data);
     }
 
     archive_read_free(a);
-    return listing;
+    return entry_count;
 }
 
