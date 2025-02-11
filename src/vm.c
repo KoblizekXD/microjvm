@@ -32,7 +32,7 @@ void load_class(vm_t *vm, class_file *cf)
 void load_classes(vm_t *vm, class_file **classes, size_t count)
 {
     vm->loaded_classes_count += count;
-    vm->cfs = realloc(vm->cfs, vm->loaded_classes_count);
+    vm->cfs = realloc(vm->cfs, vm->loaded_classes_count * sizeof(class_file*));
     for (size_t i = 0; i < count; i++) {
         vm->cfs[vm->loaded_classes_count - count + i] = classes[i];
     }
@@ -53,4 +53,5 @@ void destroy_vm(vm_t *vm)
         free_classfile(vm->cfs[i]);
     }
     free(vm->cfs);
+    free(vm);
 }

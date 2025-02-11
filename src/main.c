@@ -1,7 +1,8 @@
-#include "util.h"
+#include <util.h>
 #include <native/runtime.h>
 #include <classfile/types.h>
 #include <classfile/read.h>
+#include <vm.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,17 +25,21 @@ int main(int argc, char **argv)
     }
 
     printf("\x1b[36;49mMicroJVM Virtual Machine v1.0\x1b[0m\n\n");
+    vm_t *vm = create_vm();
 
     char *home = getenv("JAVA_HOME");
     if (home == NULL && (argc == 1 || strcmp(argv[1], "--no-default-lib"))) {
         errprintf("JAVA_HOME must be set in order to correctly reinterpret Java's runtime classes.\n\tIf you wish to continue anyways, use flag --no-default-lib");
         exit(1);
     }
-    class_file **cf_entries;
-    size_t entries = 0;
+    class_file **cf_entries = NULL;
     if (argc != 2 || strcmp(argv[1], "--no-default-lib") != 0) {
-        entries = read_jmod(getenv("JAVA_HOME"), "java.base", &cf_entries);
+        size_t entries = read_jmod(getenv("JAVA_HOME"), "java.base", &cf_entries);
+        load_classes(vm, cf_entries, entries);
     }
+
+    destroy_vm(vm);
+    free(cf_entries);
 
     FILE* f = fopen("build/Test.class", "rb"); 
 

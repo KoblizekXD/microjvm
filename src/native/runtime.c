@@ -12,7 +12,7 @@
 extern uint8_t *pc;
 extern void parse_instruction(class_file *cf, code c, stack_t *op_stack);
 
-attribute_info *get_attr(attribute_info *attrs, size_t size, int id)
+attribute_info *find_attribute(attribute_info *attrs, size_t size, int id)
 {
     for (size_t i = 0; i < size; i++) {
         if (attrs[i].synth_attr_type == id)
@@ -44,7 +44,7 @@ int entry(class_file *cf)
         return 1;
     }
 
-    code c = get_attr(main_method->attributes, main_method->attributes_count, CODE)->data.code_attribute;
+    code c = find_attribute(main_method->attributes, main_method->attributes_count, CODE)->data.code_attribute;
 
     bytecode_exec(cf, c);
 

@@ -41,7 +41,7 @@ size_t read_jmod(const char *java_home, const char *jmod_name, class_file ***ent
     size_t s1len = strlen(java_home);
     size_t s2len = strlen(jmod_name);
     char *together = malloc(s1len + 7 + s2len + 5 + 1);
-    if (together == NULL) return NULL;
+    if (together == NULL) return 0;
     strcpy(together, java_home);
     strcat(together, "/jmods/");
     strcat(together, jmod_name);
@@ -59,7 +59,7 @@ size_t read_jmod(const char *java_home, const char *jmod_name, class_file ***ent
         fprintf(stderr, "Failed to open archive: %s\n", archive_error_string(a));
         free(together);
         archive_read_free(a);
-        return NULL;
+        return 0;
     }
     free(together);
 
@@ -77,9 +77,9 @@ size_t read_jmod(const char *java_home, const char *jmod_name, class_file ***ent
 
         if (stream != NULL) {
             class_file *cf = read_classfile(stream);
-            *entries = realloc(entries, (entry_count + 1) * sizeof(class_file*));
+            *entries = realloc(*entries, (entry_count + 1) * sizeof(class_file*));
             entry_count++;
-            *entries[entry_count - 1] = cf;
+            (*entries)[entry_count - 1] = cf;
         } else errprintf("Failed to open memory handle");
 
         free(data);
