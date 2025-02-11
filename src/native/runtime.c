@@ -1,3 +1,4 @@
+#include <vm.h>
 #include <classfile/attr.h>
 #include <classfile/read.h>
 #include <native/runtime.h>
@@ -10,7 +11,7 @@
 #include <util.h>
 
 extern uint8_t *pc;
-extern void parse_instruction(class_file *cf, code c, stack_t *op_stack);
+extern void parse_instruction(vm_t *vm, class_file *cf, stack_frame *frame);
 
 attribute_info *find_attribute(attribute_info *attrs, size_t size, int id)
 {
@@ -21,32 +22,29 @@ attribute_info *find_attribute(attribute_info *attrs, size_t size, int id)
     return NULL;
 }
 
-void bytecode_exec(class_file *cf, code c)
+void bytecode_exec(vm_t *vm, class_file *cf, code *c)
 {
-    debug_fprintf(stdout, "Entering bytecode execution: stack=%d, locals=%d", c.max_stack, c.max_locals); 
-    pc = c.code;
-    stack_t *op_stack = create(c.max_stack);
-
-    while (pc < c.code + c.code_length) {
-        parse_instruction(cf, c, op_stack);
+    debug_fprintf(stdout, "Entering bytecode execution: stack=%d, locals=%d", c->max_stack, c->max_locals); 
+    pc = c->code;
+    stack_frame *frame = push_frame(vm->thread_current, c);
+    while (pc < c->code + c->code_length) {
+        parse_instruction(vm, cf, frame);
     }
-
-    destroy(op_stack);
 }
 
-int entry(class_file *cf)
+int entry(vm_t *vm, class_file *cf)
 {
     method_info *main_method = get_main(cf);
 
     if (main_method == NULL) {
         fprintf(stderr, "\x1b[37;41;1mError\x1b[0m: No suitable exection entry point found\n");
-        free_classfile(cf);
+        destroy_vm(vm);
         return 1;
     }
 
-    code c = find_attribute(main_method->attributes, main_method->attributes_count, CODE)->data.code_attribute;
+    code *c = &find_attribute(main_method->attributes, main_method->attributes_count, CODE)->data.code_attribute;
 
-    bytecode_exec(cf, c);
+    bytecode_exec(vm, cf, c);
 
     return 0;
 }

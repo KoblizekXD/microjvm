@@ -25,8 +25,10 @@ typedef struct {
 typedef struct {
     size_t loaded_classes_count;
     class_file **cfs;
+
     size_t threads_count;
     vm_thread *threads;
+    vm_thread *thread_current;
 } vm_t;
 
 typedef struct {
@@ -36,9 +38,10 @@ typedef struct {
     char *main;
 } vm_options;
 
-vm_t *create_vm();
-void  load_class(vm_t *vm, class_file *cf);
-void  load_classes(vm_t *vm, class_file **classes, size_t count);
-void  destroy_vm(vm_t *vm);
+vm_t*           create_vm();
+void            load_class(vm_t *vm, class_file *cf);
+void            load_classes(vm_t *vm, class_file **classes, size_t count);
+void            destroy_vm(vm_t *vm);
+stack_frame*    push_frame(vm_thread *thread, code *code_seg);
 
 #endif // MICROJVM_VM_H

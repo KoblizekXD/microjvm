@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     vm_t *vm = create_vm();
 
     char *home = getenv("JAVA_HOME");
-    if (home == NULL || opts.no_default_lib) {
+    if (home == NULL) {
         errprintf("JAVA_HOME must be set in order to correctly reinterpret Java's runtime classes.\n\tIf you wish to continue anyways, use flag --no-default-lib");
         exit(1);
     }
@@ -52,14 +52,14 @@ int main(int argc, char **argv)
 
     int ret = 0;
     if (opts.classpath_len == 1)
-        ret = entry(vm->cfs[vm->loaded_classes_count - 1]);
+        ret = entry(vm, vm->cfs[vm->loaded_classes_count - 1]);
     else if (opts.main != NULL) {
         int found = 0;
         for (size_t i = 0; i < vm->loaded_classes_count; i++) {
             struct _utf8_info* utf8 = fqn_of(vm->cfs[i]);
             if (streq(opts.main, utf8->bytes, utf8->length)) {
                 found = 1;
-                ret = entry(vm->cfs[i]);
+                ret = entry(vm, vm->cfs[i]);
                 break;
             }
         }

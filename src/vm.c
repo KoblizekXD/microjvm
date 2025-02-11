@@ -1,5 +1,6 @@
-#include "classfile/read.h"
+#include <classfile/read.h>
 #include <classfile/types.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <vm.h>
@@ -17,8 +18,9 @@ vm_t *create_vm()
     vm_t *vm = (vm_t*) malloc(sizeof(vm_t));
     vm->cfs = NULL;
     vm->loaded_classes_count = 0;
-    vm->threads_count = 0;
-    vm->threads = NULL;
+    vm->threads_count = 1;
+    vm->threads = calloc(1, 1 * sizeof(vm_thread));
+    vm->thread_current = vm->threads;
     return vm;
 }
 
@@ -27,6 +29,22 @@ void load_class(vm_t *vm, class_file *cf)
     vm->loaded_classes_count++;
     vm->cfs = realloc(vm->cfs, vm->loaded_classes_count * sizeof(class_file*));
     vm->cfs[vm->loaded_classes_count - 1] = cf;
+}
+
+stack_frame* push_frame(vm_thread *thread, code *code_seg)
+{
+    thread->frame_size++;
+    thread->frames = realloc(thread->frames, sizeof(stack_frame) * thread->frame_size);
+    thread->frames[thread->frame_size - 1] = (stack_frame) {
+        .local_vars = (int*) malloc(sizeof(int) * code_seg->max_locals),
+        .local_vars_count = 0,
+        .operand_stack = (operand_stack*) malloc(sizeof(operand_stack))
+    };
+    thread->frames[thread->frame_size - 1].operand_stack->capacity = code_seg->max_stack;
+    thread->frames[thread->frame_size - 1].operand_stack->top = 0;
+    thread->frames[thread->frame_size - 1].operand_stack->values = malloc(sizeof(uint64_t) * code_seg->max_stack);
+
+    return &thread->frames[thread->frame_size - 1];
 }
 
 void load_classes(vm_t *vm, class_file **classes, size_t count)

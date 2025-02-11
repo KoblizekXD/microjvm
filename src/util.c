@@ -7,7 +7,7 @@
 #include <endian.h>
 #include <stdarg.h>
 
-// #define VM_DEBUG
+#define VM_DEBUG
 
 int streq(const char *s1, uint8_t *s2, size_t s2_len)
 {
