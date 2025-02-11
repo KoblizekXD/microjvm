@@ -1,4 +1,4 @@
-#include "classfile/read.h"
+#include <classfile/read.h>
 #include <util.h>
 #include <archive.h>
 #include <archive_entry.h>
@@ -8,17 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-int starts_with(const char *what, const char *with)
-{
-    size_t len2 = strlen(with);
-
-    if (strncmp(what, with, len2) == 0) {
-        return 1;     
-    }
-
-    return 0;
-}
 
 int ends_with(const char *str, const char *suffix)
 {

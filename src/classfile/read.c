@@ -33,6 +33,10 @@ class_file *read_classfile(FILE *stream)
 
     class_file* cf = (class_file*) malloc(sizeof(class_file));
     read_32(cf->magic);
+    if (cf->magic != 0xCAFEBABE) {
+        errprintf("Invalid Class File header");
+        return NULL;
+    }
     read_16(cf->minor_version);
     read_16(cf->major_version);
     read_16(cf->constant_pool_count);

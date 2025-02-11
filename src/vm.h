@@ -29,6 +29,13 @@ typedef struct {
     vm_thread *threads;
 } vm_t;
 
+typedef struct {
+    int no_default_lib;
+    int classpath_len;
+    char **classpath;
+    char *main;
+} vm_options;
+
 vm_t *create_vm();
 void  load_class(vm_t *vm, class_file *cf);
 void  load_classes(vm_t *vm, class_file **classes, size_t count);

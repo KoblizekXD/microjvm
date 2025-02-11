@@ -56,12 +56,13 @@ static void free_methods(method_info *methods, size_t count)
     free(methods);
 }
 
-static void free_cp(cp_info *cp, size_t count)
+static void free_cp(cp_info *restrict cp, size_t count)
 {
-    if (cp == NULL) return;
+    if (!cp || count == 0) return;
     for (size_t i = 0; i < count; i++) {
-        if (cp[i].tag == CONSTANT_Utf8)
-            free(cp[i].info.utf8_info.bytes);
+        cp_info *entry = &cp[i];
+        if (entry->tag == CONSTANT_Utf8)
+            free(entry->info.utf8_info.bytes);
     }
     free(cp);
 }

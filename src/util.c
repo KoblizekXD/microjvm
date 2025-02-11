@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <util.h>
 #include <classfile/types.h>
 #include <endian.h>
@@ -17,6 +18,19 @@ int streq(const char *s1, uint8_t *s2, size_t s2_len)
         if (s1[i] != s2[i]) return 0;
     }
     return 1;
+}
+
+struct _utf8_info *fqn_of(class_file *cf)
+{
+    int index = cf->constant_pool[cf->this_class - 1].info.class_info.name_index;
+    return &cf->constant_pool[index].info.utf8_info;
+}
+
+int starts_with(const char *str, const char *prefix) 
+{
+    if (!str || !prefix) return 0;
+    size_t prefix_len = strlen(prefix);
+    return strncmp(str, prefix, prefix_len) == 0;
 }
 
 void dump(FILE *stream, class_file cf)

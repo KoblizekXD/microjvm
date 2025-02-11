@@ -130,7 +130,7 @@ typedef struct {
             uint16_t name_and_type_index;
         } field_method_ifmethod_ref_info;
         struct {
-            uint32_t string_index;
+            uint16_t string_index;
         } string_info;
         struct {
             uint32_t bytes;

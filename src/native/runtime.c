@@ -48,6 +48,5 @@ int entry(class_file *cf)
 
     bytecode_exec(cf, c);
 
-    free_classfile(cf);
     return 0;
 }
