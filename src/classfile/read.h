@@ -21,6 +21,7 @@
  * Otherwise, a dynamically allocated pointer will be returned(don't forget to free it).
  */
 class_file *read_classfile(FILE *stream);
+ClassFile  *ReadClassFileFromStream(FILE *stream);
 
 /**
  * Frees given class file.
@@ -32,5 +33,7 @@ void free_classfile(class_file *cf);
  * Reads n attribute entries from stream and dynamically allocates them. 
  */
 attribute_info *read_attr(FILE *stream, size_t n, class_file cf);
+
+attribute_info *ReadAttributes(FILE *stream, size_t count, cp_info *pool);
 
 #endif // MICROJVM_READ_H

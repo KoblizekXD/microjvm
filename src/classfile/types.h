@@ -199,4 +199,38 @@ typedef struct class_file {
     attribute_info* attributes;
 } class_file;
 
+typedef struct {
+    uint16_t access_flags;
+    const char *descriptor;
+    const char *name;
+    void *value;
+} Field;
+
+#define NOCODE -1
+
+typedef struct {
+    uint16_t access_flags;
+    char *descriptor;
+    char *name;
+    uint16_t max_stack;
+    uint16_t max_locals;
+    uint32_t code_length;
+    uint8_t *code;
+} Method;
+
+typedef struct {
+    uint32_t magic;
+    uint16_t minor_version;
+    uint16_t major_version;
+    uint16_t access_flags;
+    const char *name;
+    const char *super_name;
+    size_t interface_count;
+    const char **interfaces;
+    size_t field_count;
+    Field *fields;
+    size_t method_count;
+    Method *methods;
+} ClassFile;
+
 #endif // MICROJVM_TYPES_H

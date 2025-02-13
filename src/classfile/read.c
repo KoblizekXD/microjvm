@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <endian.h>
+#include <string.h>
 #include <unistd.h>
 
 #define NONNULL_ASSIGN(ASSIGN_TO, WHAT) if (WHAT == NULL) return NULL; \
@@ -16,50 +17,61 @@
 
 cp_info *read_cp(FILE *stream, size_t entries /* - 1 */);
 attribute_info *read_attr(FILE *stream, size_t entries, class_file cf);
-field_info *read_fields(FILE *stream, size_t entries, class_file cf);
-method_info *read_methods(FILE *stream, size_t entries, class_file cf);
+Field *ReadFields(FILE *stream, size_t entries, cp_info* cf);
+Method *ReadMethods(FILE *stream, size_t entries, cp_info *cp);
 
-class_file *read_classfile(FILE *stream)
+char *to_string(struct _utf8_info utf8)
+{
+    char *str = (char*) malloc(utf8.length + 1);
+    if (str == NULL) return NULL;
+
+    memcpy(str, utf8.bytes, utf8.length);
+    str[utf8.length] = '\0';
+
+    return str;
+}
+
+ClassFile *ReadClassFileFromStream(FILE *stream)
 {
     if (stream == NULL) 
     {
         errno = EINVAL;
         return NULL;
     }
-
     uint32_t temp_32;
     uint32_t temp_16;
     size_t result = 1;
 
-    class_file* cf = (class_file*) malloc(sizeof(class_file));
+    ClassFile *cf = (ClassFile*) malloc(sizeof(ClassFile));
     read_32(cf->magic);
-    if (cf->magic != 0xCAFEBABE) {
-        errprintf("Invalid Class File header");
-        return NULL;
-    }
     read_16(cf->minor_version);
     read_16(cf->major_version);
-    read_16(cf->constant_pool_count);
-    cf->constant_pool = read_cp(stream, cf->constant_pool_count - 1);
-    if (cf->constant_pool == NULL) {
-        errprintf("Failed to read constant pool");
+    uint16_t cpool_size;
+    read_16(cpool_size);
+    cpool_size--;
+    cp_info *pool = read_cp(stream, cpool_size);
+    if (pool == NULL) {
+        errprintf("Failure in reading constant pool");
         return NULL;
     }
     read_16(cf->access_flags);
-    read_16(cf->this_class);
-    read_16(cf->super_class);
-    read_16(cf->interfaces_count);
-    cf->interfaces = (uint16_t*) malloc(sizeof(uint16_t) * cf->interfaces_count);
-    fread(cf->interfaces, sizeof(uint16_t), cf->interfaces_count, stream);
-    for (size_t i = 0; i < cf->interfaces_count; i++) {
-        cf->interfaces[i] = be16toh(cf->interfaces[i]);
+    uint16_t classIndex;
+    read_16(classIndex);
+    cf->name = to_string(pool[pool[classIndex - 1].info.class_info.name_index - 1].info.utf8_info);
+    read_16(classIndex);
+    if (classIndex == 0) cf->super_name = "java/lang/Object";
+    cf->super_name = to_string(pool[pool[classIndex - 1].info.class_info.name_index - 1].info.utf8_info);
+    read_16(cf->interface_count);
+    cf->interfaces = malloc(sizeof(const char*) * cf->interface_count);
+
+    for (size_t i = 0; i < cf->interface_count; i++) {
+        read_16(classIndex);
+        cf->interfaces[i] = to_string(pool[pool[classIndex - 1].info.class_info.name_index - 1].info.utf8_info);
     }
-    read_16(cf->fields_count);
-    cf->fields = read_fields(stream, cf->fields_count, *cf);
-    read_16(cf->methods_count);
-    cf->methods = read_methods(stream, cf->methods_count, *cf);
-    read_16(cf->attributes_count);
-    cf->attributes = read_attr(stream, cf->attributes_count, *cf);
+    read_16(cf->field_count);
+    cf->fields = ReadFields(stream, cf->field_count, pool);
+    read_16(cf->method_count);
+    cf->methods = ReadMethods(stream, cf->method_count, pool);
 
     return cf;
 }
@@ -137,53 +149,56 @@ cp_info *read_cp(FILE *stream, size_t entries /* - 1 */)
     return info;
 }
 
-attribute_info *read_attr(FILE *stream, size_t entries, class_file cf)
+attribute_info *ReadAttributes(FILE *stream, size_t count, cp_info *pool)
 {
     uint16_t temp_16;
     uint32_t temp_32;
     size_t result;
-    attribute_info *attr = (attribute_info*) malloc(sizeof(attribute_info) * entries);
-    for (size_t i = 0; i < entries; i++) {
+    attribute_info *attr = (attribute_info*) malloc(sizeof(attribute_info) * count);
+    for (size_t i = 0; i < count; i++) {
         read_16(attr[i].attribute_name_index);
         read_32(attr[i].attribute_length);
-        read_attr_data(stream, cf, &attr[i]);
+        read_attr_data(stream, pool, &attr[i]);
         // attr[i].info = (uint8_t*) malloc(attr[i].attribute_length * sizeof(uint8_t));
         // fread(attr[i].info, sizeof(uint8_t), attr[i].attribute_length, stream);
     }
     return attr;
 }
 
-field_info *read_fields(FILE *stream, size_t entries, class_file cf)
+Field *ReadFields(FILE *stream, size_t entries, cp_info *cp)
 {
     uint16_t temp_16;
     size_t result;
-    field_info *fields = (field_info*) malloc(sizeof(field_info) * entries);
-
+    Field *fields = (Field*) malloc(sizeof(Field*) * entries);
+    uint16_t index;
     for (size_t i = 0; i < entries; i++) {
         read_16(fields[i].access_flags);
-        read_16(fields[i].name_index);
-        read_16(fields[i].descriptor_index);
-        read_16(fields[i].attributes_count);
-        fields[i].attributes = read_attr(stream, fields[i].attributes_count, cf);
+        read_16(index);
+        fields[i].name = to_string(cp[index - 1].info.utf8_info);
+        read_16(index);
+        fields[i].descriptor = to_string(cp[index - 1].info.utf8_info);
+        fields[i].value = NULL;
+        read_16(index);
+        ReadAttributes(stream, index, cp);
     }
-
     return fields;
 }
 
-method_info *read_methods(FILE *stream, size_t entries, class_file cf)
+Method *ReadMethods(FILE *stream, size_t entries, cp_info *cp)
 {
     uint16_t temp_16;
     size_t result;
-    method_info *methods = (method_info*) malloc(sizeof(method_info) * entries);
+    Method *methods = (Method*) malloc(sizeof(Method) * entries);
 
     for (size_t i = 0; i < entries; i++) {
         read_16(methods[i].access_flags);
-        read_16(methods[i].name_index);
-        read_16(methods[i].descriptor_index);
-        read_16(methods[i].attributes_count);
-        methods[i].attributes = read_attr(stream, methods[i].attributes_count, cf);
+        read_16(temp_16);
+        methods[i].name = to_string(cp[temp_16 - 1].info.utf8_info);
+        read_16(temp_16);
+        methods[i].descriptor = to_string(cp[temp_16 - 1].info.utf8_info);
+        read_16(temp_16);
+        attribute_info *attrs = ReadAttributes(stream, temp_16, cp);
     }
 
     return methods;
 }
-

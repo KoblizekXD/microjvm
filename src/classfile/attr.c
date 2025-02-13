@@ -8,16 +8,6 @@
 #include <stddef.h>
 #include <string.h>
 
-int utf8eq(struct _utf8_info utf8str, const char *cstr)
-{
-    size_t cstr_len = strlen(cstr);
-    if (utf8str.length != cstr_len) return 0;
-    for (size_t i = 0; i < cstr_len; i++) {
-        if (utf8str.bytes[i] != cstr[i]) return 0;
-    }
-    return 1;
-}
-
 int get_attr(struct _utf8_info *name)
 {
     if (!name || !name->bytes) return ATTR_UNKNOWN;
@@ -83,12 +73,12 @@ int get_attr(struct _utf8_info *name)
     return ATTR_UNKNOWN;
 }
 
-void *read_attr_data(FILE *stream, class_file cf, attribute_info *info)
+void *read_attr_data(FILE *stream, cp_info *cp, attribute_info *info)
 {
     uint32_t temp_32;
     uint16_t temp_16;
     size_t result = 1;
-    cp_info cp_entry = cf.constant_pool[info->attribute_name_index - 1];
+    cp_info cp_entry = cp[info->attribute_name_index - 1];
     int attr_id = get_attr(&cp_entry.info.utf8_info);
     info->synth_attr_type = attr_id;
 
@@ -109,7 +99,7 @@ void *read_attr_data(FILE *stream, class_file cf, attribute_info *info)
             read_16(info->data.code_attribute.exception_table[i].catch_type);
         }
         read_16(info->data.code_attribute.attributes_count);
-        info->data.code_attribute.attributes = read_attr(stream, info->data.code_attribute.attributes_count, cf);
+        info->data.code_attribute.attributes = ReadAttributes(stream, info->data.code_attribute.attributes_count, cp);
     } else if (attr_id == STACK_MAP_TABLE) {
         fseek(stream, info->attribute_length, SEEK_CUR);
     } else if (attr_id == BOOTSTRAP_METHODS) {
@@ -132,8 +122,8 @@ void *read_attr_data(FILE *stream, class_file cf, attribute_info *info)
         info->data.permitted_subclasses.classes = (uint16_t*) malloc(sizeof(uint16_t) * info->data.permitted_subclasses.number_of_classes);
         fread(info->data.permitted_subclasses.classes, sizeof(uint16_t), info->data.permitted_subclasses.number_of_classes, stream); 
     } else {
-        debug_fprintf(stderr, "Error: Cannot determine attribute %.*s", cf.constant_pool[info->attribute_name_index - 1].info.utf8_info.length,
-            cf.constant_pool[info->attribute_name_index - 1].info.utf8_info.bytes);
+        debug_fprintf(stderr, "Error: Cannot determine attribute %.*s", cp[info->attribute_name_index - 1].info.utf8_info.length,
+            cp[info->attribute_name_index - 1].info.utf8_info.bytes);
         fseek(stream, info->attribute_length, SEEK_CUR);
     }
 

@@ -7,7 +7,7 @@
 #include <endian.h>
 #include <stdarg.h>
 
-#define VM_DEBUG
+// #define VM_DEBUG
 
 int streq(const char *s1, uint8_t *s2, size_t s2_len)
 {
@@ -16,6 +16,16 @@ int streq(const char *s1, uint8_t *s2, size_t s2_len)
 
     for (size_t i = 0; i < s1_len; i++) {
         if (s1[i] != s2[i]) return 0;
+    }
+    return 1;
+}
+
+int utf8eq(struct _utf8_info utf8str, const char *cstr)
+{
+    size_t cstr_len = strlen(cstr);
+    if (utf8str.length != cstr_len) return 0;
+    for (size_t i = 0; i < cstr_len; i++) {
+        if (utf8str.bytes[i] != cstr[i]) return 0;
     }
     return 1;
 }
