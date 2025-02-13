@@ -164,46 +164,15 @@ typedef struct {
     } info;
 } cp_info;
 
-typedef struct {
-    uint16_t access_flags;
-    uint16_t name_index;
-    uint16_t descriptor_index;
-    uint16_t attributes_count;
-    attribute_info* attributes;
-} field_info;
+typedef cp_info *ConstantPool;
 
 typedef struct {
     uint16_t access_flags;
-    uint16_t name_index;
-    uint16_t descriptor_index;
-    uint16_t attributes_count;
-    attribute_info* attributes;
-} method_info;
-
-typedef struct class_file {
-    uint32_t magic;
-    uint16_t minor_version;
-    uint16_t major_version;
-    uint16_t constant_pool_count;
-    cp_info* constant_pool;
-    uint16_t access_flags;
-    uint16_t this_class;
-    uint16_t super_class;
-    uint16_t interfaces_count;
-    uint16_t* interfaces;
-    uint16_t fields_count;
-    field_info* fields;
-    uint16_t methods_count;
-    method_info* methods;
-    uint16_t attributes_count;
-    attribute_info* attributes;
-} class_file;
-
-typedef struct {
-    uint16_t access_flags;
-    const char *descriptor;
-    const char *name;
+    char *descriptor;
+    char *name;
     void *value;
+    uint16_t attribute_count;
+    attribute_info *attributes;
 } Field;
 
 #define NOCODE -1
@@ -216,6 +185,8 @@ typedef struct {
     uint16_t max_locals;
     uint32_t code_length;
     uint8_t *code;
+    uint16_t attribute_count;
+    attribute_info *attributes;
 } Method;
 
 typedef struct {
@@ -223,14 +194,19 @@ typedef struct {
     uint16_t minor_version;
     uint16_t major_version;
     uint16_t access_flags;
-    const char *name;
-    const char *super_name;
+    size_t contant_pool_size;
+    ConstantPool constant_pool;
+    char *name;
+    uint8_t has_superclass;
+    char *super_name;
     size_t interface_count;
-    const char **interfaces;
-    size_t field_count;
+    char **interfaces;
+    uint16_t field_count;
     Field *fields;
-    size_t method_count;
+    uint16_t method_count;
     Method *methods;
+    size_t attribute_count;
+    attribute_info *attributes;
 } ClassFile;
 
 #endif // MICROJVM_TYPES_H

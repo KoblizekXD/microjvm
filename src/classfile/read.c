@@ -16,7 +16,6 @@
 #define read_8(SAVE_TO) if (fread(&SAVE_TO, sizeof(uint8_t), 1, stream) != 1)
 
 cp_info *read_cp(FILE *stream, size_t entries /* - 1 */);
-attribute_info *read_attr(FILE *stream, size_t entries, class_file cf);
 Field *ReadFields(FILE *stream, size_t entries, cp_info* cf);
 Method *ReadMethods(FILE *stream, size_t entries, cp_info *cp);
 
@@ -39,7 +38,7 @@ ClassFile *ReadClassFileFromStream(FILE *stream)
         return NULL;
     }
     uint32_t temp_32;
-    uint32_t temp_16;
+    uint16_t temp_16;
     size_t result = 1;
 
     ClassFile *cf = (ClassFile*) malloc(sizeof(ClassFile));
@@ -50,6 +49,8 @@ ClassFile *ReadClassFileFromStream(FILE *stream)
     read_16(cpool_size);
     cpool_size--;
     cp_info *pool = read_cp(stream, cpool_size);
+    cf->contant_pool_size = cpool_size;
+    cf->constant_pool = pool;
     if (pool == NULL) {
         errprintf("Failure in reading constant pool");
         return NULL;
@@ -59,10 +60,15 @@ ClassFile *ReadClassFileFromStream(FILE *stream)
     read_16(classIndex);
     cf->name = to_string(pool[pool[classIndex - 1].info.class_info.name_index - 1].info.utf8_info);
     read_16(classIndex);
-    if (classIndex == 0) cf->super_name = "java/lang/Object";
-    cf->super_name = to_string(pool[pool[classIndex - 1].info.class_info.name_index - 1].info.utf8_info);
+    if (classIndex == 0) {
+        cf->super_name = "Object";
+        cf->has_superclass = 0;
+    } else {
+        cf->super_name = to_string(pool[pool[classIndex - 1].info.class_info.name_index - 1].info.utf8_info);
+        cf->has_superclass = 1;
+    }
     read_16(cf->interface_count);
-    cf->interfaces = malloc(sizeof(const char*) * cf->interface_count);
+    cf->interfaces = malloc(sizeof(char*) * cf->interface_count);
 
     for (size_t i = 0; i < cf->interface_count; i++) {
         read_16(classIndex);
@@ -72,6 +78,8 @@ ClassFile *ReadClassFileFromStream(FILE *stream)
     cf->fields = ReadFields(stream, cf->field_count, pool);
     read_16(cf->method_count);
     cf->methods = ReadMethods(stream, cf->method_count, pool);
+    read_16(cf->attribute_count);
+    cf->attributes = ReadAttributes(stream, cf->attribute_count, pool);
 
     return cf;
 }
@@ -169,7 +177,7 @@ Field *ReadFields(FILE *stream, size_t entries, cp_info *cp)
 {
     uint16_t temp_16;
     size_t result;
-    Field *fields = (Field*) malloc(sizeof(Field*) * entries);
+    Field *fields = (Field*) malloc(sizeof(Field) * entries);
     uint16_t index;
     for (size_t i = 0; i < entries; i++) {
         read_16(fields[i].access_flags);
@@ -178,8 +186,8 @@ Field *ReadFields(FILE *stream, size_t entries, cp_info *cp)
         read_16(index);
         fields[i].descriptor = to_string(cp[index - 1].info.utf8_info);
         fields[i].value = NULL;
-        read_16(index);
-        ReadAttributes(stream, index, cp);
+        read_16(fields[i].attribute_count);
+        fields[i].attributes = ReadAttributes(stream, fields[i].attribute_count, cp);
     }
     return fields;
 }
@@ -196,8 +204,26 @@ Method *ReadMethods(FILE *stream, size_t entries, cp_info *cp)
         methods[i].name = to_string(cp[temp_16 - 1].info.utf8_info);
         read_16(temp_16);
         methods[i].descriptor = to_string(cp[temp_16 - 1].info.utf8_info);
-        read_16(temp_16);
-        attribute_info *attrs = ReadAttributes(stream, temp_16, cp);
+        read_16(methods[i].attribute_count);
+        methods[i].attributes = ReadAttributes(stream, methods[i].attribute_count, cp);
+        int hasCode = 0;
+        for (size_t j = 0; j < methods[i].attribute_count; j++) {
+            if (methods[i].attributes[j].synth_attr_type == CODE) {
+                hasCode = 1;
+                code c = methods[i].attributes[j].data.code_attribute;
+                methods[i].max_stack = c.max_stack;
+                methods[i].max_locals = c.max_locals;
+                methods[i].code_length = c.code_length;
+                methods[i].code = c.code;
+                break;
+            }
+        }
+        if (!hasCode) {
+            methods[i].code = NULL;
+            methods[i].code_length = NOCODE;
+            methods[i].max_locals = NOCODE;
+            methods[i].max_stack = NOCODE;
+        }
     }
 
     return methods;
