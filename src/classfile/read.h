@@ -20,7 +20,7 @@
  * If the reading fails, the function will return NULL, with corresponding errno set.
  * Otherwise, a dynamically allocated pointer will be returned(don't forget to free it).
  */
-ClassFile  *ReadClassFileFromStream(FILE *stream);
+ClassFile *ReadClassFileFromStream(FILE *stream);
 
 /**
  * Frees given class file.
