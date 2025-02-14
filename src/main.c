@@ -13,7 +13,7 @@ uint8_t *pc = 0x0;
 
 void print_help();
 vm_options parse_options(int argc, char **argv);
-extern size_t read_jmod(const char *java_home, const char *jmod_name, class_file ***entries);
+extern size_t read_jmod(const char *java_home, const char *jmod_name, ClassFile ***entries);
 
 int main(int argc, char **argv)
 {
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
         errprintf("JAVA_HOME must be set in order to correctly reinterpret Java's runtime classes.\n\tIf you wish to continue anyways, use flag --no-default-lib");
         exit(1);
     }
-    class_file **cf_entries = NULL;
+    ClassFile **cf_entries = NULL;
     if (!opts.no_default_lib) {
         size_t entries = read_jmod(getenv("JAVA_HOME"), "java.base", &cf_entries);
         load_classes(vm, cf_entries, entries);
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
                 perror("Failed to open classfile");
                 continue;
             }
-            class_file* cf = read_classfile(f);
+            ClassFile* cf = ReadClassFileFromStream(f);
             if (cf == NULL) {
                 errprintf("Invalid classfile structure for %s\n", opts.classpath[i]);
                 fclose(f);
@@ -56,8 +56,7 @@ int main(int argc, char **argv)
     else if (opts.main != NULL) {
         int found = 0;
         for (size_t i = 0; i < vm->loaded_classes_count; i++) {
-            struct _utf8_info* utf8 = fqn_of(vm->cfs[i]);
-            if (streq(opts.main, utf8->bytes, utf8->length)) {
+            if (strcmp(opts.main, vm->cfs[i]->name)) {
                 found = 1;
                 ret = entry(vm, vm->cfs[i]);
                 break;

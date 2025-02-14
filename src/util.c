@@ -7,7 +7,7 @@
 #include <endian.h>
 #include <stdarg.h>
 
-#define VM_DEBUG
+// #define VM_DEBUG
 
 int streq(const char *s1, uint8_t *s2, size_t s2_len)
 {
@@ -20,10 +20,14 @@ int streq(const char *s1, uint8_t *s2, size_t s2_len)
     return 1;
 }
 
-struct _utf8_info *fqn_of(class_file *cf)
+int utf8eq(struct _utf8_info utf8str, const char *cstr)
 {
-    int index = cf->constant_pool[cf->this_class - 1].info.class_info.name_index;
-    return &cf->constant_pool[index].info.utf8_info;
+    size_t cstr_len = strlen(cstr);
+    if (utf8str.length != cstr_len) return 0;
+    for (size_t i = 0; i < cstr_len; i++) {
+        if (utf8str.bytes[i] != cstr[i]) return 0;
+    }
+    return 1;
 }
 
 int starts_with(const char *str, const char *prefix) 
@@ -33,24 +37,12 @@ int starts_with(const char *str, const char *prefix)
     return strncmp(str, prefix, prefix_len) == 0;
 }
 
-void dump(FILE *stream, class_file cf)
+Method* get_main(ClassFile *cf)
 {
-    fprintf(stream, "Java Class File version %d.%d\n", cf.major_version, cf.minor_version);
-    uint8_t* data = cf.constant_pool[cf.constant_pool[cf.this_class - 1].info.class_info.name_index - 1].info.utf8_info.bytes;
-    uint16_t len = cf.constant_pool[cf.constant_pool[cf.this_class - 1].info.class_info.name_index - 1].info.utf8_info.length;
-    fprintf(stream, "Class %.*s\n", len, data);
-    fprintf(stream, "\tPublic: %d\n", (cf.access_flags & ACC_PUBLIC) != 0);
-}
-
-method_info* get_main(class_file *cf)
-{
-    for (size_t i = 0; i < cf->methods_count; i++) {
-        struct _utf8_info name_data = cf->constant_pool[cf->methods[i].name_index - 1].info.utf8_info;
-        struct _utf8_info desc_data = cf->constant_pool[cf->methods[i].descriptor_index - 1].info.utf8_info;
-
-        if (streq("main", name_data.bytes, name_data.length) && streq("([Ljava/lang/String;)V", desc_data.bytes, desc_data.length))
+    for (size_t i = 0; i < cf->method_count; i++) {
+        if (strcmp("main", cf->methods[i].name) == 0 && strcmp("([Ljava/lang/String;)V", cf->methods[i].descriptor) == 0)
             return &cf->methods[i];
-    }
+    } 
     return NULL;
 }
 

@@ -4,6 +4,6 @@
 #include <vm.h>
 #include <classfile/types.h>
 
-int entry(vm_t *vm, class_file *cf);
+int entry(vm_t *vm, ClassFile *cf);
 
 #endif // MICROJVM_RUNTIME_H

@@ -42,6 +42,6 @@
 #define PERMITTED_SUBCLASSES                    30
 
 int get_attr(struct _utf8_info *info);
-void *read_attr_data(FILE *stream, class_file cf, attribute_info *info);
+void *read_attr_data(FILE *stream, cp_info *cp, attribute_info *info);
 
 #endif // MICROJVM_ATTR_H

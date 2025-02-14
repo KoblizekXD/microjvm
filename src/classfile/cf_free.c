@@ -38,24 +38,6 @@ static void free_attr_info(attribute_info *attr, size_t count)
     free(attr);
 }
 
-static void free_fields(field_info *fields, size_t count)
-{
-    if (fields == NULL) return;
-    for (size_t i = 0; i < count; i++) {
-        free_attr_info(fields[i].attributes, fields[i].attributes_count);
-    }
-    free(fields);
-}
-
-static void free_methods(method_info *methods, size_t count)
-{
-    if (methods == NULL) return;
-    for (size_t i = 0; i < count; i++) {
-        free_attr_info(methods[i].attributes, methods[i].attributes_count);
-    }
-    free(methods);
-}
-
 static void free_cp(cp_info *restrict cp, size_t count)
 {
     if (!cp || count == 0) return;
@@ -67,16 +49,29 @@ static void free_cp(cp_info *restrict cp, size_t count)
     free(cp);
 }
 
-void free_classfile(class_file *cf)
+void FreeClassFile(ClassFile *cf)
 {
-    if (cf == NULL) {
-        errprintf("Failed to free classfile, because passing classfile was NULL!");
-        return;
+    free_cp(cf->constant_pool, cf->contant_pool_size);
+    free(cf->name);
+    if (cf->has_superclass)
+        free(cf->super_name);
+    for (size_t i = 0; i < cf->interface_count; i++) {
+        free(cf->interfaces[i]);
     }
-    free_cp(cf->constant_pool, cf->constant_pool_count - 1);
     free(cf->interfaces);
-    free_fields(cf->fields, cf->fields_count);
-    free_methods(cf->methods, cf->methods_count);
-    free_attr_info(cf->attributes, cf->attributes_count);
+    for (size_t i = 0; i < cf->field_count; i++) {
+        free(cf->fields[i].name);
+        free(cf->fields[i].descriptor);
+        free(cf->fields[i].value);
+        free(cf->fields[i].attributes);
+    }
+    free(cf->fields);
+    for (size_t i = 0; i < cf->method_count; i++) {
+        free(cf->methods[i].name);
+        free(cf->methods[i].descriptor);
+        free_attr_info(cf->methods[i].attributes, cf->methods[i].attribute_count);
+    }
+    free(cf->methods);
+    free_attr_info(cf->attributes, cf->attribute_count);
     free(cf);
 }
