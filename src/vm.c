@@ -14,7 +14,7 @@ vm_thread *create_thread()
     return th;
 }
 
-vm_t *create_vm()
+vm_t *create_vm(vm_options *opts)
 {
     vm_t *vm = (vm_t*) malloc(sizeof(vm_t));
     vm->cfs = NULL;
@@ -22,6 +22,7 @@ vm_t *create_vm()
     vm->threads_count = 1;
     vm->threads = calloc(1, 1 * sizeof(vm_thread));
     vm->thread_current = vm->threads;
+    vm->opts = opts;
     return vm;
 }
 

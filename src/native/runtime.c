@@ -2,7 +2,6 @@
 #include <classfile/attr.h>
 #include <classfile/read.h>
 #include <native/runtime.h>
-#include <native/stack.h>
 #include <classfile/types.h>
 #include <stddef.h>
 #include <stdint.h>

@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     vm_options opts = parse_options(argc, argv);
 
     printf("\x1b[36;49mMicroJVM Virtual Machine v1.0\x1b[0m\n\n");
-    vm_t *vm = create_vm();
+    vm_t *vm = create_vm(&opts);
 
     char *home = getenv("JAVA_HOME");
     if (home == NULL) {
@@ -78,8 +78,10 @@ void print_help()
     printf("Usage: microjvm [flags...] classpath...\n\nFlags:\n");
     printf("\t--version\n\t\tPrints version related information.\n");
     printf("\t--help\n\t\tPrints this.\n");
-    printf("\t--no-default-lib\n\t\tOmits lookup for default JVM installation. This can be useful if you want to use custom runtime classes.\n");
-    printf("\t--main <class>\n\t\tSets the default main class. This is unnecessary if classpath contains only 1 class.\n");
+    printf("\t--no-default-lib\n\t\tOmits lookup for default JVM installation. This can be useful if you want to use custom runtime classes. Requires JAVA_HOME variable set.\n");
+    printf("\t--main <class>\n\t\tSets the default main class. This is unnecessary if classpath contains only 1 class(JVM doesn't count).\n");
+    printf("\t--max-heap <size>\n\t\tSets the maximum size of the heap memory of the virtual machine in bytes. Attempting to exceed this value will result in crash. Defaults to 4096.\n");
+    printf("\t--min-heap <size>\n\t\tSets the minimum size of the heap memory of the virtual machine in bytes. This value will be preallocated. Default to 1024(1KiB).\n");
 }
 
 #define strequals(s1, s2) (strcmp(s1, s2) == 0)

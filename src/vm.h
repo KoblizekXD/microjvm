@@ -6,6 +6,13 @@
 #include <stdint.h>
 
 typedef struct {
+    int no_default_lib;
+    size_t classpath_len;
+    char **classpath;
+    char *main;
+} vm_options;
+
+typedef struct {
     int capacity;
     int top;
     uint64_t *values;
@@ -23,6 +30,7 @@ typedef struct {
 } vm_thread;
 
 typedef struct {
+    vm_options *opts;
     size_t loaded_classes_count;
     ClassFile **cfs;
 
@@ -31,18 +39,12 @@ typedef struct {
     vm_thread *thread_current;
 } vm_t;
 
-typedef struct {
-    int no_default_lib;
-    int classpath_len;
-    char **classpath;
-    char *main;
-} vm_options;
-
-vm_t*           create_vm();
+vm_t*           create_vm(vm_options *opts);
 void            load_class(vm_t *vm, ClassFile *cf);
 void            load_classes(vm_t *vm, ClassFile **classes, size_t count);
 void            destroy_vm(vm_t *vm);
 stack_frame*    push_frame(vm_thread *thread, Method *method);
 ClassFile*      find_class(vm_t *vm, const char *name);
+ClassFile*      LoadClass(vm_t *vm, const char *name, int initialize);
 
 #endif // MICROJVM_VM_H
