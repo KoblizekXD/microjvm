@@ -46,5 +46,6 @@ void            destroy_vm(vm_t *vm);
 stack_frame*    push_frame(vm_thread *thread, Method *method);
 ClassFile*      find_class(vm_t *vm, const char *name);
 ClassFile*      LoadClass(vm_t *vm, const char *name, int initialize);
+ClassFile*      LoadClassFromFile(vm_t *vm, const char *path, int initialize);
 
 #endif // MICROJVM_VM_H

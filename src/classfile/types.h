@@ -185,6 +185,7 @@ typedef struct {
     uint16_t max_locals;
     uint32_t code_length;
     uint8_t *code;
+    void *native_bind;
     uint16_t attribute_count;
     attribute_info *attributes;
 } Method;

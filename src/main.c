@@ -13,7 +13,6 @@ uint8_t *pc = 0x0;
 
 void print_help();
 vm_options parse_options(int argc, char **argv);
-extern size_t read_jmod(const char *java_home, const char *jmod_name, ClassFile ***entries);
 
 int main(int argc, char **argv)
 {
@@ -23,52 +22,36 @@ int main(int argc, char **argv)
     vm_t *vm = create_vm(&opts);
 
     char *home = getenv("JAVA_HOME");
-    if (home == NULL) {
+    if (home == NULL && opts.no_default_lib == 0) {
         errprintf("JAVA_HOME must be set in order to correctly reinterpret Java's runtime classes.\n\tIf you wish to continue anyways, use flag --no-default-lib");
         exit(1);
-    }
-    ClassFile **cf_entries = NULL;
-    if (!opts.no_default_lib) {
-        size_t entries = read_jmod(getenv("JAVA_HOME"), "java.base", &cf_entries);
-        load_classes(vm, cf_entries, entries);
-    }
-
-    if (opts.classpath != NULL) {
-        for (int i = 0; i < opts.classpath_len; i++) {
-            FILE* f = fopen(opts.classpath[i], "rb");
-            if (f == NULL) {
-                perror("Failed to open classfile");
-                continue;
-            }
-            ClassFile* cf = ReadClassFileFromStream(f);
-            if (cf == NULL) {
-                errprintf("Invalid classfile structure for %s\n", opts.classpath[i]);
-                fclose(f);
-            }
-            load_class(vm, cf);
-            fclose(f);
-        }
+    } else if (home != NULL && opts.no_default_lib == 0) {
+        opts.classpath_len++;
+        opts.classpath = realloc(opts.classpath, opts.classpath_len * sizeof(char*));
+        char *base_jmod = malloc(sizeof(char) * (strlen(home) + 7 + 9 + 6));
+        sprintf(base_jmod, "%s/jmods/java.base.jmod", home);
+        opts.classpath[opts.classpath_len - 1] = base_jmod;
     }
 
-    int ret = 0;
-    if (opts.classpath_len == 1)
-        ret = entry(vm, vm->cfs[vm->loaded_classes_count - 1]);
-    else if (opts.main != NULL) {
-        int found = 0;
-        for (size_t i = 0; i < vm->loaded_classes_count; i++) {
-            if (strcmp(opts.main, vm->cfs[i]->name)) {
-                found = 1;
-                ret = entry(vm, vm->cfs[i]);
-                break;
-            }
-        }
-        if (found) {
+    int ret = 0; 
+    if ((opts.no_default_lib == 1 && opts.classpath_len == 1) || (opts.no_default_lib == 0 && opts.classpath_len - 1 == 1)) {
+        ret = entry(vm, LoadClassFromFile(vm, opts.classpath[0], 1));
+    } else if (opts.main != NULL) {
+        ClassFile* cf = LoadClass(vm, opts.main, 1);
+        if (cf == NULL) {
             errprintf("Could not find main class %s", opts.main);
+        } else {
+            ret = entry(vm, cf);
         }
+    } else {
+        errprintf("Please provide a valid entrypoint of the JVM using the --main flag!");
     }
 
+    for (size_t i = 0; i < opts.classpath_len; i++) {
+        free(opts.classpath[i]);
+    }
+    free(opts.classpath);
     destroy_vm(vm);
-    free(cf_entries); 
 
     return ret;
 }
@@ -102,8 +85,13 @@ vm_options parse_options(int argc, char **argv)
     }
     for (int i = 1; i < argc; i++) {
         if (!starts_with(argv[i], "--")) {
-            opts.classpath = argv + i;
             opts.classpath_len = argc - i;
+            opts.classpath = (char**) malloc(sizeof(char*) * opts.classpath_len);
+            for (size_t j = i; j < i + opts.classpath_len; j++) {
+                char* new = (char*) malloc(strlen(argv[j]) + 1);
+                strcpy(new, argv[j]);
+                opts.classpath[j - i] = new;
+            }
             break;
         }
         if (strequals(argv[i], "--no-default-lib"))

@@ -40,6 +40,23 @@ Method* _find_clinit(ClassFile* cf)
     return NULL;
 }
 
+ClassFile* LoadClassFromFile(vm_t *vm, const char *path, int initialize)
+{
+    FILE* f = fopen(path, "rb");
+    if (f == NULL) return NULL;
+    ClassFile* cf = ReadClassFileFromStream(f);
+    fclose(f);
+    if (cf == NULL) return NULL;
+    if (initialize) {
+        Method *clinit = _find_clinit(cf);
+        if (clinit) bytecode_exec(vm, cf, clinit);
+    }
+    vm->loaded_classes_count++;
+    vm->cfs = realloc(vm->cfs, vm->loaded_classes_count * sizeof(ClassFile*));
+    vm->cfs[vm->loaded_classes_count - 1] = cf;
+    return cf;
+}
+
 ClassFile* LoadClass(vm_t *vm, const char *name, int initialize)
 {
     for (size_t i = 0; i < vm->loaded_classes_count; i++) {
@@ -58,6 +75,9 @@ ClassFile* LoadClass(vm_t *vm, const char *name, int initialize)
                     Method *clinit = _find_clinit(cf);
                     if (clinit) bytecode_exec(vm, cf, clinit);
                 }
+                vm->loaded_classes_count++;
+                vm->cfs = realloc(vm->cfs, vm->loaded_classes_count * sizeof(ClassFile*));
+                vm->cfs[vm->loaded_classes_count - 1] = cf;
                 return cf;
             } else FreeClassFile(cf);
         } else if (ends_with(classpath[i], ".jmod")) {
@@ -85,6 +105,9 @@ ClassFile* LoadClass(vm_t *vm, const char *name, int initialize)
                             Method *clinit = _find_clinit(cf);
                             if (clinit) bytecode_exec(vm, cf, clinit);
                         }
+                        vm->loaded_classes_count++;
+                        vm->cfs = realloc(vm->cfs, vm->loaded_classes_count * sizeof(ClassFile*));
+                        vm->cfs[vm->loaded_classes_count - 1] = cf;
                         return cf;
                     } else {
                         errprintf("Failed to open memory handle");
