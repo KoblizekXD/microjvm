@@ -75,6 +75,8 @@ vm_options parse_options(int argc, char **argv)
     opts.no_default_lib = 0;
     opts.classpath = NULL;
     opts.main = NULL;
+    opts.heap_min = 1024;
+    opts.heap_max = 4096;
 
     if (argc == 1 || strequals(argv[1], "--help")) {
         print_help();

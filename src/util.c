@@ -83,3 +83,39 @@ int ends_with(const char *str, const char *suffix)
     
     return strcmp(str + (str_len - suffix_len), suffix) == 0;
 }
+
+const char *PRIMITIVE_DESC_TYPES = "BCDFIJSZ";
+
+size_t get_arg_count(const char *descriptor)
+{
+    size_t count = 0;
+    size_t length = strlen(descriptor);
+
+    for (size_t i = 0; i < length; i++) {
+        char c = descriptor[i];
+
+        if (strchr(PRIMITIVE_DESC_TYPES, c)) {
+            count++;
+        } else if (c == 'L') {
+            i++;
+            while (descriptor[i] != ';') {
+                i++;
+            }
+            count++;
+        } else if (c == '[') {
+            while (descriptor[i] == '[') {
+                i++;
+            }
+            if (descriptor[i] == 'L') {
+                while (descriptor[i] != ';') {
+                    i++;
+                }
+            }
+            count++;
+            i--;
+        }
+    }
+
+    return count;
+}
+

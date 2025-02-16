@@ -1,3 +1,4 @@
+#include "util.h"
 #include <classfile/read.h>
 #include <classfile/types.h>
 #include <stdint.h>
@@ -36,17 +37,43 @@ void load_class(vm_t *vm, ClassFile *cf)
 stack_frame* push_frame(vm_thread *thread, Method *method)
 {
     thread->frame_size++;
-    thread->frames = realloc(thread->frames, sizeof(stack_frame) * thread->frame_size);
-    thread->frames[thread->frame_size - 1] = (stack_frame) {
-        .local_vars = (int*) malloc(sizeof(int) * method->max_locals),
-        .local_vars_count = 0,
-        .operand_stack = (operand_stack*) malloc(sizeof(operand_stack))
-    };
-    thread->frames[thread->frame_size - 1].operand_stack->capacity = method->max_stack;
-    thread->frames[thread->frame_size - 1].operand_stack->top = 0;
-    thread->frames[thread->frame_size - 1].operand_stack->values = malloc(sizeof(uint64_t) * method->max_stack);
+    
+    stack_frame *new_frames = realloc(thread->frames, sizeof(stack_frame) * thread->frame_size);
+    if (!new_frames) return NULL;
+    thread->frames = new_frames;
 
-    return &thread->frames[thread->frame_size - 1];
+    stack_frame *frame = &thread->frames[thread->frame_size - 1];
+    
+    frame->local_vars = malloc(sizeof(int) * method->max_locals);
+    frame->local_vars_count = 0;
+    frame->operand_stack = malloc(sizeof(operand_stack));
+    
+    frame->operand_stack->capacity = method->max_stack;
+    frame->operand_stack->top = 0;
+    frame->operand_stack->values = malloc(sizeof(uint64_t) * method->max_stack);
+
+    return frame;
+}
+
+void pop_frame(vm_thread *thread)
+{
+    if (thread->frame_size == 0) return;
+
+    stack_frame *frame = &thread->frames[--thread->frame_size];
+
+    free(frame->local_vars);
+    free(frame->operand_stack->values);
+    free(frame->operand_stack);
+
+    if (thread->frame_size > 0) {
+        stack_frame *new_frames = realloc(thread->frames, sizeof(stack_frame) * thread->frame_size);
+        if (new_frames) {
+            thread->frames = new_frames;
+        }
+    } else {
+        free(thread->frames);
+        thread->frames = NULL;
+    }
 }
 
 void load_classes(vm_t *vm, ClassFile **classes, size_t count)
@@ -80,6 +107,24 @@ ClassFile* find_class(vm_t *vm, const char *name)
 {
     for (size_t i = 0; i < vm->loaded_classes_count; i++) {
         if (strcmp(vm->cfs[i]->name, name) == 0) return vm->cfs[i];
+    }
+    return NULL;
+}
+
+Method* GetMethod(ClassFile *cf, const char *name)
+{
+    for (size_t i = 0; i < cf->method_count; i++) {
+        if (strcmp(cf->methods[i].name, name) == 0)
+            return &cf->methods[i];
+    }
+    return NULL;
+}
+
+Method* GetMethodUtf8(ClassFile *cf, struct _utf8_info info)
+{
+    for (size_t i = 0; i < cf->method_count; i++) {
+        if (streq(cf->methods[i].name, info.bytes, info.length))
+            return &cf->methods[i];
     }
     return NULL;
 }

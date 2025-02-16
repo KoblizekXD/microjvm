@@ -13,5 +13,6 @@ Method *get_main(ClassFile *cf);
 void debug_fprintf(FILE *stream, const char *format, ...);
 void errprintf(const char *format, ...);
 int ends_with(const char *str, const char *suffix);
+size_t get_arg_count(const char *descriptor);
 
 #endif

@@ -57,6 +57,16 @@ ClassFile* LoadClassFromFile(vm_t *vm, const char *path, int initialize)
     return cf;
 }
 
+ClassFile* LoadClassUtf8(vm_t *vm, struct _utf8_info utf8_name, int initialize)
+{
+    char* data = (char*) malloc(utf8_name.length + 1);
+    memcpy(data, utf8_name.bytes, utf8_name.length);
+    data[utf8_name.length] = '\0';
+    ClassFile* cf = LoadClass(vm, data, initialize);
+    free(data);
+    return cf;
+}
+
 ClassFile* LoadClass(vm_t *vm, const char *name, int initialize)
 {
     for (size_t i = 0; i < vm->loaded_classes_count; i++) {

@@ -139,7 +139,7 @@ typedef struct {
             uint32_t high_bytes;
             uint32_t low_bytes;
         } long_double_info;
-        struct {
+        struct name_type_info {
             uint16_t name_index;
             uint16_t descriptor_index;
         } name_and_type_info;
