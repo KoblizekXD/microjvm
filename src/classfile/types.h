@@ -125,7 +125,7 @@ typedef struct {
         struct {
             uint16_t name_index;
         } class_info;
-        struct {
+        struct member_ref {
             uint16_t class_index;
             uint16_t name_and_type_index;
         } field_method_ifmethod_ref_info;

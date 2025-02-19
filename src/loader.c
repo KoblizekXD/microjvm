@@ -98,6 +98,7 @@ ClassFile* LoadClass(vm_t *vm, const char *name, int initialize)
             archive_read_support_format_all(a);
             archive_read_support_filter_all(a);
             sprintf(together, "classes/%s.class", name);
+            archive_read_open_filename(a, classpath[i], 10240);
             while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
                 const char *pathname = archive_entry_pathname(entry);
                 if (strcmp(pathname, together) == 0) {
@@ -111,23 +112,28 @@ ClassFile* LoadClass(vm_t *vm, const char *name, int initialize)
                         archive_read_free(a);
                         fclose(stream);
                         free(data);
-                        if (initialize) {
-                            Method *clinit = _find_clinit(cf);
-                            if (clinit) bytecode_exec(vm, cf, clinit);
-                        }
                         vm->loaded_classes_count++;
                         vm->cfs = realloc(vm->cfs, vm->loaded_classes_count * sizeof(ClassFile*));
                         vm->cfs[vm->loaded_classes_count - 1] = cf;
+                        if (initialize) {
+                            Method *clinit = _find_clinit(cf);
+                            if (clinit) bytecode_exec(vm, cf, clinit);
+                        } 
+                        free(together);
                         return cf;
                     } else {
                         errprintf("Failed to open memory handle");
                         free(data);
+                        archive_read_free(a);
+                        free(together);
                         return NULL;
                     }
                 } else {
                     archive_read_data_skip(a);
                 }
             }
+            archive_read_free(a);
+            free(together);
         } else if (ends_with(classpath[i], ".jar")) {
             errprintf("Reading JAR files is not yet supported.");
         }

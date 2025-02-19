@@ -23,12 +23,13 @@ void parse_instruction(vm_t *vm, ClassFile *cf, stack_frame *frame)
         case GETSTATIC: {
             uint8_t indexbyte1 = *pc++;
             uint16_t index = (indexbyte1 << 8) | *pc++;
-            cp_info fref = cf->constant_pool[index - 1];
-            struct _utf8_info target_type = cf->constant_pool[cf->constant_pool[fref.info.field_method_ifmethod_ref_info.class_index - 1].info.class_info.name_index - 1].info.utf8_info;
-            struct _utf8_info field_name = cf->constant_pool[cf->constant_pool[fref.info.field_method_ifmethod_ref_info.class_index - 1].info.name_and_type_info.name_index - 1].info.utf8_info;
+            struct member_ref fref = cf->constant_pool[index - 1].info.field_method_ifmethod_ref_info;
+            struct _utf8_info target_type = cf->constant_pool[cf->constant_pool[fref.class_index - 1].info.class_info.name_index - 1].info.utf8_info;
+            struct _utf8_info target_name = cf->constant_pool[cf->constant_pool[fref.name_and_type_index - 1].info.name_and_type_info.name_index - 1].info.utf8_info;
             ClassFile* cf = LoadClassUtf8(vm, target_type, 1);
+            Field* f = GetFieldUtf8(cf, target_name); 
             break;
-        }    
+        }
         case LDC: {
             uint8_t index = *pc++;
             break;
@@ -36,9 +37,10 @@ void parse_instruction(vm_t *vm, ClassFile *cf, stack_frame *frame)
         case INVOKESTATIC: {
             uint8_t indexbyte1 = *pc++;
             uint16_t index = (indexbyte1 << 8) | *pc++;
-            cp_info mref = cf->constant_pool[index - 1];
-            struct name_type_info nt_info = cf->constant_pool[mref.info.field_method_ifmethod_ref_info.name_and_type_index - 1].info.name_and_type_info;
-            ClassFile* target_cf = LoadClassUtf8(vm, cf->constant_pool[nt_info.descriptor_index - 1].info.utf8_info, 1);
+            struct member_ref mref = cf->constant_pool[index - 1].info.field_method_ifmethod_ref_info;
+            struct name_type_info nt_info = cf->constant_pool[mref.name_and_type_index - 1].info.name_and_type_info;
+            struct _utf8_info target_name = cf->constant_pool[cf->constant_pool[mref.class_index - 1].info.class_info.name_index - 1].info.utf8_info;
+            ClassFile* target_cf = LoadClassUtf8(vm, target_name, 1);
 
             Method* method = GetMethodUtf8(target_cf, cf->constant_pool[nt_info.name_index - 1].info.utf8_info);
             stack_frame* new_frame = push_frame(vm->thread_current, method);

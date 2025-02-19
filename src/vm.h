@@ -4,6 +4,7 @@
 #include <classfile/types.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <dlfcn.h>
 
 typedef struct {
     int no_default_lib;
@@ -39,6 +40,8 @@ typedef struct {
     size_t threads_count;
     vm_thread *threads;
     vm_thread *thread_current;
+
+    void *sym_handle;
 } vm_t;
 
 vm_t*           create_vm(vm_options *opts);
@@ -53,5 +56,7 @@ ClassFile*      LoadClassUtf8(vm_t *vm, struct _utf8_info utf8_name, int initial
 ClassFile*      LoadClassFromFile(vm_t *vm, const char *path, int initialize);
 Method*         GetMethod(ClassFile *cf, const char *name);
 Method*         GetMethodUtf8(ClassFile *cf, struct _utf8_info info);
+
+Field*          GetFieldUtf8(ClassFile *cf, struct _utf8_info info);
 
 #endif // MICROJVM_VM_H

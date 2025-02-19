@@ -1,6 +1,7 @@
 #include "util.h"
 #include <classfile/read.h>
 #include <classfile/types.h>
+#include <dlfcn.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -24,6 +25,7 @@ vm_t *create_vm(vm_options *opts)
     vm->threads = calloc(1, 1 * sizeof(vm_thread));
     vm->thread_current = vm->threads;
     vm->opts = opts;
+    vm->sym_handle = dlopen(NULL, RTLD_NOW);
     return vm;
 }
 
@@ -128,3 +130,13 @@ Method* GetMethodUtf8(ClassFile *cf, struct _utf8_info info)
     }
     return NULL;
 }
+
+Field* GetFieldUtf8(ClassFile *cf, struct _utf8_info info)
+{
+    for (size_t i = 0; i < cf->field_count; i++) {
+        if (streq(cf->fields[i].name, info.bytes, info.length))
+            return &cf->fields[i];
+    }
+    return NULL;
+}
+
