@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <util.h>
@@ -119,3 +120,10 @@ size_t get_arg_count(const char *descriptor)
     return count;
 }
 
+char *alloc_string(struct _utf8_info utf8)
+{
+    char* str = malloc(utf8.length + 1);
+    if (str == NULL) return NULL;
+    str[utf8.length] = '\0';
+    return str;
+}

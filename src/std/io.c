@@ -1,7 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
 
-void println(const char *text)
+void println(void *instance, void **args)
 {
-    printf(text);
+    puts((const char*) args[0]);
 }

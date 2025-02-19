@@ -15,15 +15,22 @@ typedef struct {
     uint32_t heap_max;
 } vm_options;
 
+#define OP_STACK_VALUE_CPOOL_REF 0x1
+
+typedef struct _stack_value {
+    uint8_t type;
+    int value;
+} _stack_value;
+
 typedef struct {
     int capacity;
     int top;
-    uint64_t *values;
+    _stack_value *stack_values;
 } operand_stack;
 
 typedef struct {
     uint32_t local_vars_count;
-    int *local_vars;
+    _stack_value *local_vars;
     operand_stack *operand_stack;
 } stack_frame;
 

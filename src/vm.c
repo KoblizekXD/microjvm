@@ -51,8 +51,8 @@ stack_frame* push_frame(vm_thread *thread, Method *method)
     frame->operand_stack = malloc(sizeof(operand_stack));
     
     frame->operand_stack->capacity = method->max_stack;
-    frame->operand_stack->top = 0;
-    frame->operand_stack->values = malloc(sizeof(uint64_t) * method->max_stack);
+    frame->operand_stack->top = -1;
+    frame->operand_stack->stack_values = malloc(sizeof(_stack_value) * method->max_stack);
 
     return frame;
 }
@@ -64,7 +64,7 @@ void pop_frame(vm_thread *thread)
     stack_frame *frame = &thread->frames[--thread->frame_size];
 
     free(frame->local_vars);
-    free(frame->operand_stack->values);
+    free(frame->operand_stack->stack_values);
     free(frame->operand_stack);
 
     if (thread->frame_size > 0) {
@@ -91,7 +91,7 @@ void destroy_vm(vm_t *vm)
 {
     for (size_t i = 0; i < vm->threads_count; i++) {
         for (size_t j = 0; j < vm->threads[i].frame_size; j++) {
-            free(vm->threads[i].frames[j].operand_stack->values);
+            free(vm->threads[i].frames[j].operand_stack->stack_values);
             free(vm->threads[i].frames[j].operand_stack);
             free(vm->threads[i].frames[j].local_vars);
         }
@@ -102,6 +102,7 @@ void destroy_vm(vm_t *vm)
         FreeClassFile(vm->cfs[i]);
     }
     free(vm->cfs);
+    dlclose(vm->sym_handle);
     free(vm);
 }
 

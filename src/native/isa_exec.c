@@ -32,6 +32,9 @@ void parse_instruction(vm_t *vm, ClassFile *cf, stack_frame *frame)
         }
         case LDC: {
             uint8_t index = *pc++;
+            frame->operand_stack->top++;
+            frame->operand_stack->stack_values[frame->operand_stack->top].type = OP_STACK_VALUE_CPOOL_REF;
+            frame->operand_stack->stack_values[frame->operand_stack->top].value = index;
             break;
         }
         case INVOKESTATIC: {
@@ -46,7 +49,7 @@ void parse_instruction(vm_t *vm, ClassFile *cf, stack_frame *frame)
             stack_frame* new_frame = push_frame(vm->thread_current, method);
             size_t arg_count = get_arg_count(method->descriptor);
             for (size_t i = 0; i < arg_count; i++) {
-                new_frame->local_vars[i] = frame->operand_stack->values[frame->operand_stack->top];
+                new_frame->local_vars[i] = frame->operand_stack->stack_values[frame->operand_stack->top];
                 frame->operand_stack->top--;
                 new_frame->local_vars_count++;
             }

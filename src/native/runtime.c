@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <util.h>
 #include <dlfcn.h>
@@ -24,13 +25,29 @@ attribute_info *find_attribute(attribute_info *attrs, size_t size, int id)
 
 void execute_native(vm_t *vm, ClassFile *cf, Method *method, stack_frame *frame)
 {
-    void *handle = dlsym(vm->sym_handle, method->name);
+    void (*handle)(void *instance, void **args) = (void (*)(void *instance, void **args)) dlsym(vm->sym_handle, method->name);
     
     if (!handle) {
         errprintf("Method symbol not found: %s", method->name);
         return;
     }
-    
+    size_t i = get_arg_count(method->descriptor);
+    void **args = malloc(sizeof(void*) * i);
+    for (size_t j = 0; j < i; j++) {
+         _stack_value val = frame->operand_stack->stack_values[frame->operand_stack->top];
+         if (val.type == OP_STACK_VALUE_CPOOL_REF) {
+             cp_info info = cf->constant_pool[val.value - 1];
+             switch (info.tag) {
+                 case CONSTANT_String: {
+                      info.info.string_info.string_index;
+                      break;
+                 }
+             }
+         }
+         frame->operand_stack->top--;
+    }
+    handle(cf, args);
+    free(args);
 }
 
 void bytecode_exec(vm_t *vm, ClassFile *cf, Method *method)
